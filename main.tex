@@ -1,0 +1,310 @@
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\documentclass[runningheads]{llncs}
+
+% packages
+\usepackage{xspace}
+\usepackage{ifthen}
+\usepackage{amsbsy}
+\usepackage{amssymb}
+\usepackage{balance}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{needspace}
+\usepackage{microtype}
+\usepackage{bold-extra}
+
+% constants
+\newcommand{\Title}{AOP for better code quality}
+\newcommand{\TitleShort}{\Title}
+\newcommand{\Authors}{}
+\newcommand{\AuthorsShort}{}
+
+% references
+\usepackage[colorlinks]{hyperref}
+\usepackage[all]{hypcap}
+\setcounter{tocdepth}{2}
+\hypersetup{
+	colorlinks=true,
+	urlcolor=black,
+	linkcolor=black,
+	citecolor=black,
+	plainpages=false,
+	bookmarksopen=true,
+	pdfauthor={\Authors},
+	pdftitle={\Title}}
+
+\def\chapterautorefname{Chapter}
+\def\appendixautorefname{Appendix}
+\def\sectionautorefname{Section}
+\def\subsectionautorefname{Section}
+\def\figureautorefname{Figure}
+\def\tableautorefname{Table}
+\def\listingautorefname{Listing}
+
+% source code
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{listings}
+\definecolor{source}{gray}{0.9}
+\lstset{
+	language={},
+	% characters
+	tabsize=3,
+	upquote=true,
+	escapechar={!},
+	keepspaces=true,
+	breaklines=true,
+	alsoletter={\#:},
+	breakautoindent=true,
+	columns=fullflexible,
+	showstringspaces=false,
+	basicstyle=\footnotesize\ttfamily,
+	% background
+	frame=single,
+    framerule=0pt,
+	backgroundcolor=\color{source},
+	% numbering
+	numbersep=5pt,
+	numberstyle=\tiny,
+	numberfirstline=true,
+	% captioning
+	captionpos=b,
+	% formatting (html)
+	moredelim=[is][\textbf]{<b>}{</b>},
+	moredelim=[is][\textit]{<i>}{</i>},
+	moredelim=[is][\color{red}\uwave]{<u>}{</u>},
+	moredelim=[is][\color{red}\sout]{<del>}{</del>},
+	moredelim=[is][\color{blue}\underline]{<ins>}{</ins>}}
+\newcommand{\ct}{\lstinline[backgroundcolor=\color{white},basicstyle=\footnotesize\ttfamily]}
+\newcommand{\lct}[1]{{\small\tt #1}}
+
+% tikz
+% \usepackage{tikz}
+% \usetikzlibrary{matrix}
+% \usetikzlibrary{arrows}
+% \usetikzlibrary{external}
+% \usetikzlibrary{positioning}
+% \usetikzlibrary{shapes.multipart}
+% 
+% \tikzset{
+% 	every picture/.style={semithick},
+% 	every text node part/.style={align=center}}
+% \tikzexternalize[prefix=figures/]{quality}
+
+% proof-reading
+\usepackage{xcolor}
+\usepackage[normalem]{ulem}
+\newcommand{\ra}{$\rightarrow$}
+\newcommand{\ugh}[1]{\textcolor{red}{\uwave{#1}}} % please rephrase
+\newcommand{\ins}[1]{\textcolor{blue}{\uline{#1}}} % please insert
+\newcommand{\del}[1]{\textcolor{red}{\sout{#1}}} % please delete
+\newcommand{\chg}[2]{\textcolor{red}{\sout{#1}}{\ra}\textcolor{blue}{\uline{#2}}} % please change
+\newcommand{\chk}[1]{\textcolor{ForestGreen}{#1}} % changed, please check
+
+% comments \nb{label}{color}{text}
+\newboolean{showcomments}
+\setboolean{showcomments}{true}
+\ifthenelse{\boolean{showcomments}}
+	{\newcommand{\nb}[3]{
+		{\colorbox{#2}{\bfseries\sffamily\scriptsize\textcolor{white}{#1}}}
+		{\textcolor{#2}{\sf\small$\blacktriangleright$\textit{#3}$\blacktriangleleft$}}}
+	 \newcommand{\version}{\emph{\scriptsize$-$Id$-$}}}
+	{\newcommand{\nb}[2]{}
+	 \newcommand{\version}{}}
+\newcommand{\rev}[2]{\nb{Reviewer #1}{red}{#2}}
+\newcommand{\ab}[1]{\nb{Alexandre}{blue}{#1}}
+\newcommand{\lr}[1]{\nb{Lukas}{orange}{#1}}
+
+% graphics: \fig{position}{percentage-width}{filename}{caption}
+\DeclareGraphicsExtensions{.png,.jpg,.pdf,.eps,.gif}
+\graphicspath{{figures/}}
+\newcommand{\fig}[4]{
+	\begin{figure}[#1]
+		\centering
+		\includegraphics[width=#2\textwidth]{#3}
+		\caption{\label{fig:#3}#4}
+	\end{figure}}
+
+% abbreviations
+\newcommand{\ie}{\emph{i.e.,}\xspace}
+\newcommand{\eg}{\emph{e.g.,}\xspace}
+\newcommand{\etc}{\emph{etc.}\xspace}
+\newcommand{\etal}{\emph{et al.}\xspace}
+
+% lists
+\newenvironment{bullets}[0]
+	{\begin{itemize}}
+	{\end{itemize}}
+
+\newcommand{\seclabel}[1]{\label{sec:#1}}
+
+% D O C U M E N T
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\begin{document}
+
+% T I T L E
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\title{\Title}
+\titlerunning{\TitleShort}
+
+\author{\Authors} 
+\authorrunning{\AuthorsShort}
+
+\institute{PLEIAD Lab, Department of Computer Science (DCC),\\
+	University of Chile, Santiago, Chile}
+
+\maketitle
+
+% A B S T R A C T
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\begin{abstract}
+
+\end{abstract}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Introduction}\seclabel{introduction}
+
+- Different patterns of hand written code that are rewritten (refactored?) with pragmas 
+
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Refactoring}\seclabel{refactoring}
+
+\paragraph{What we would like to have}\ \\
+The programmer, instead of writting:
+\begin{lstlisting}
+MOGraphElement>>absoluteBounds	absoluteBoundsCache ifNotNil: [ ^ absoluteBoundsCache ].	^ absoluteBoundsCache := self shape absoluteBoundsFor: self
+\end{lstlisting}
+
+He/She should write:
+
+\begin{lstlisting}
+MOGraphElement>>absoluteBounds	<cache: #absoluteBoundsCache>	 ^ self shape absoluteBoundsFor: self
+\end{lstlisting}
+
+Then, our cache injector mechanism will produce the code:
+\begin{lstlisting}
+MOGraphElement>>absoluteBounds
+	<instrumented>	<cache: #absoluteBoundsCache>
+	absoluteBoundsCache ifNotNil: [ ^ absoluteBoundsCache ].	 ^ absoluteBoundsCache  := self  computeAbsoluteBounds.
+	
+MOGraphElement>> computeAbsoluteBounds
+	^ self shape absoluteBoundsFor: self
+\end{lstlisting}
+
+
+
+\paragraph{What we have now in our implementation}
+
+The code
+\begin{lstlisting}
+MOGraphElement>>absoluteBounds	"Answer the bounds in absolute terms (relative to the entire Canvas, not just the parent)."	absoluteBoundsCache ifNotNil: [ ^ absoluteBoundsCache ].	^ absoluteBoundsCache := self shape absoluteBoundsFor: self
+\end{lstlisting}
+
+is transformed into 
+
+\begin{lstlisting}
+MOGraphElement>>absoluteBounds<cache: #absoluteBoundsCache before: 'absoluteBoundsCache ifNotNil: [ ^ absoluteBoundsCache ]. ^ absoluteBoundsCache := (' after: ' )'>	"Answer the bounds in absolute terms (relative to the entire Canvas, not just the parent)."	 ^ self shape absoluteBoundsFor: self
+\end{lstlisting}
+
+\begin{lstlisting}
+bounds	"Answer the bounds of the receiver."	"the bounds is has an absolute origin"	"Note that the bounds computed above, may have (and it is likely to) a different origin. The reason is that the layout is in charge to position the nodes properly"	| basicBounds |	boundsCache ifNotNil: [ ^ boundsCache ].	"We check if  the shape if present"	self shapeBoundsAt: self shape ifPresent: [ :b | ^ boundsCache := b ].	basicBounds := self shape computeBoundsFor: self.	self shapeBoundsAt: self shape put: basicBounds.	^ boundsCache := basicBounds
+\end{lstlisting}
+
+is refactorized into:
+
+\begin{lstlisting}
+bounds<cache: #boundsCache before: 'boundsCache ifNotNil: [ ^ boundsCache ]. self shapeBoundsAt: self shape ifPresent: [ :b | ^ boundsCache := b ]. ^ boundsCache :=' after: ''>	"Answer the bounds of the receiver."	"the bounds is has an absolute origin"	"Note that the bounds computed above, may have (and it is likely to) a different origin. The reason is that the layout is in charge to position the nodes properly"	| basicBounds |	basicBounds := self shape computeBoundsFor: self.	self shapeBoundsAt: self shape put: basicBounds.	^ basicBounds
+\end{lstlisting}
+
+\begin{lstlisting}
+cacheCanvas: aCanvas	cacheForm := aCanvas form copy: ((self bounds origin + aCanvas origin - (1@1)) 													extent: (self bounds extent + (2@2))).
+\end{lstlisting}
+
+is transformed into:
+
+\begin{lstlisting}
+cacheCanvas: aCanvas<cache: #cacheForm before: 'cacheForm :=' after: ''>	^(aCanvas form copy: ((self bounds origin + aCanvas origin - (1@1)) 													extent: (self bounds extent + (2@2)))).
+\end{lstlisting}
+
+
+\begin{lstlisting}
+elementsToDisplay	elementsToDisplayCache ifNotNil: [ ^ elementsToDisplayCache ].	^ elementsToDisplayCache := self computeElementsToDisplay
+\end{lstlisting}
+
+is transformed into:
+
+\begin{lstlisting}
+elementsToDisplay<cache: #elementsToDisplayCache before: 'elementsToDisplayCache ifNotNil: [ ^ elementsToDisplayCache ]. ^ elementsToDisplayCache := (' after: ' )'>^ self compute2ElementsToDisplay\end{lstlisting}	
+
+\begin{lstlisting}
+hasCachedForm	^ cacheForm notNil
+\end{lstlisting}	
+
+transformed into:
+
+\begin{lstlisting}
+hasCachedForm<cache: #cacheForm before: '' after: '.^ cacheForm notNil.'>
+\end{lstlisting}	
+
+\begin{lstlisting}
+nodeWith: anObject ifAbsent: aBlock 	| nodeLookedUp |	lookupNodeCache ifNil: [ lookupNodeCache := IdentityDictionary new ].	lookupNodeCache at: anObject ifPresent: [ :v | ^ v ].	nodeLookedUp := self nodes detect: [:each | each model = anObject ] ifNone: aBlock.	lookupNodeCache at: anObject put: nodeLookedUp.	^ nodeLookedUp
+\end{lstlisting}
+
+\begin{lstlisting}
+nodeWith: anObject ifAbsent: aBlock <cache: #lookupNodeCache before:'	lookupNodeCache ifNil: [ lookupNodeCache := IdentityDictionary new ]. lookupNodeCache at: anObject ifPresent: [ :v | ^ v ]. ^lookupNodeCache at: anObject put: (' after: ' )'>	^ self nodes detect: [:each | each model = anObject ] ifNone: aBlock.\end{lstlisting}
+
+
+\begin{lstlisting}
+resetCache	self resetElementsToLookup.	boundsCache := absoluteBoundsCache := nil.	"Having IdentityDictionary instead of SmallDictionary works the same, it is faster although"	cacheShapeBounds := SmallDictionary new.	"cacheShapeBounds := IdentityDictionary new"	elementsToDisplayCache := nil.	self resetMetricCaches
+\end{lstlisting}
+transformed into:
+\begin{lstlisting}
+resetCache<cache: #absoluteBoundsCache before: 'absoluteBoundsCache := nil.' after: ''> <cache: #elementsToDisplayCache before: 'elementsToDisplayCache := nil.' after: ''> <cache:#boundsCache before: 'boundsCache:= nil.' after: ''> <cache: #cacheShapeBounds before: 'cacheShapeBounds := SmallDictionary new.' after: ''>	self resetElementsToLookup.	self resetMetricCaches
+\end{lstlisting}
+
+\begin{lstlisting}
+MONode>>displayOn: aCanvas 	"	self layer isVisible ifFalse: [ ^ self ]."		| b canvas |	(aCanvas isVisible: self absoluteBounds) ifFalse: [ ^ self ].	self isCacheLoaded ifTrue: [		aCanvas paintImage: cacheForm at: (self absoluteBounds origin - (1@1)).		^ self ].		self shouldCache ifFalse: [ 		"If we cannot cache (for example if we are too big) then we display ourself, and iterate over inner nodes		 while giving them a chance to cache"		self displayWithoutCachingOn: aCanvas.		^ self ].			b := self bounds.		canvas := FormCanvas extent: (b extent + (2@2)) .
+	canvas 		translateBy: self absoluteBounds origin negated + (1@1) 		during: [:tmpCanvas | self displayWithoutCachingOn: tmpCanvas ].	cacheForm := canvas form.		self updateOwner. 	aCanvas paintImage: cacheForm at: (self absoluteBounds origin - (1@1)).
+\end{lstlisting}
+
+\begin{lstlisting}
+MONode>>displayOn: aCanvas <cache: #cacheForm before: '(aCanvas isVisible: self absoluteBounds) ifFalse: [ ^ self ]. self isCacheLoaded ifTrue: [		aCanvas paintImage: cacheForm at: (self absoluteBounds origin - (1@1)).		^ self ]. self shouldCache ifFalse: [ self displayWithoutCachingOn: aCanvas. ^ self ]. cacheForm := ' after: '.self updateOwner. 	aCanvas paintImage: cacheForm at: (self absoluteBounds origin - (1@1)).'>	| b canvas |	b := self bounds.		canvas := FormCanvas extent: (b extent + (2@2)) .			canvas 		translateBy: self absoluteBounds origin negated + (1@1) 		during: [:tmpCanvas | self displayWithoutCachingOn: tmpCanvas ].	^ canvas form.	
+\end{lstlisting}
+
+\begin{lstlisting}
+translateBy: aPoint bounded: bounded	"It moves the element by aPoint. 	If bounded is true and the owner is not the root, 	then the bounds are limited by the owner bounds.	If the element is placed in the root, then the root's bounds are updated"	| realStep newRelativePosition allShapes |	self shapeBounds isNil ifTrue: [ ^ self bounds ].	self shapeBounds isEmpty ifTrue: [ ^ self bounds ].	realStep :=  bounded 						ifTrue: [ self getBoundedTranslationStep: aPoint ]						ifFalse: [ aPoint ].				newRelativePosition := self origin + aPoint.		allShapes := self shapeBounds keys.	allShapes do: [ :eachShape | 		self shapeBoundsAt: eachShape put: ((self shapeBoundsAt: eachShape) translateBy: realStep) ].	boundsCache := absoluteBoundsCache := nil.	self allNodesDo: [ :n | n translateAbsoluteCacheBy: realStep ].		owner isRoot ifTrue: [		"the root has to be extended in any case"		owner expandToIncludePoint: (newRelativePosition +  self bounds extent) ].		self resetCacheInEdges
+\end{lstlisting}
+
+\begin{lstlisting}
+translateBy: aPoint bounded: bounded<cache: #boundsCache before: '' after: '.boundsCache :=nil.'><cache: #absoluteBoundsCache before: '' after: 'absoluteBoundsCache := nil.'>	"It moves the element by aPoint. 	If bounded is true and the owner is not the root, 	then the bounds are limited by the owner bounds.	If the element is placed in the root, then the root's bounds are updated"	| realStep newRelativePosition allShapes |	self shapeBounds isNil ifTrue: [ ^ self bounds ].	self shapeBounds isEmpty ifTrue: [ ^ self bounds ].	realStep :=  bounded 						ifTrue: [ self getBoundedTranslationStep: aPoint ]						ifFalse: [ aPoint ].				newRelativePosition := self origin + aPoint.		allShapes := self shapeBounds keys.	allShapes do: [ :eachShape | 		self shapeBoundsAt: eachShape put: ((self shapeBoundsAt: eachShape) translateBy: realStep) ].		owner isRoot ifTrue: [		"the root has to be extended in any case"		owner expandToIncludePoint: (newRelativePosition +  self bounds extent) ].			"boundsCache := absoluteBoundsCache := nil."	self allNodesDo: [ :n | n translateAbsoluteCacheBy: realStep ].	self resetCacheInEdges
+\end{lstlisting}
+
+\begin{lstlisting}
+NONode>>bounds	^ boundsCache ifNil: [ boundsCache := self shape computeBoundsFor: self ].
+\end{lstlisting}
+
+\begin{lstlisting}
+NONode>>bounds<cache: #boundsCache before: '^ boundsCache ifNil: [boundsCache :=' after: ' ]'>	^self shape computeBoundsFor: self.
+\end{lstlisting}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Conclusion}\seclabel{conclusion}
+
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section*{Acknowledgments}
+
+\small We gratefully thanks ...
+
+% bibliography
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\bibliographystyle{splncs}
+\bibliography{scg}
+
+\end{document}
