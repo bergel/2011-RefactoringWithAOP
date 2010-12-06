@@ -17,8 +17,8 @@
 % constants
 \newcommand{\Title}{Aspect-based refactoring}
 \newcommand{\TitleShort}{\Title}
-\newcommand{\Authors}{Santiago Vidal, Alexandre Bergel, Claudia Marcos, Gabriela Ar\'evalo}
-\newcommand{\AuthorsShort}{S. Vidal, A. Bergel, C. Marcos, G. Ar\'evalo}
+\newcommand{\Authors}{Santiago Vidal, Claudia Marcos, Alexandre Bergel, Gabriela Ar\'evalo}
+\newcommand{\AuthorsShort}{S. Vidal, C. Marcos, A. Bergel, G. Ar\'evalo}
 
 % references
 \usepackage[colorlinks]{hyperref}
@@ -169,7 +169,14 @@ an abstract
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Introduction}\seclabel{introduction}
 
-- Different patterns of hand written code that are rewritten (refactored?) with pragmas 
+The story to tell in this paper is the following one:
+1) We have the actual Mondrian code
+2) Santiago have extracted the CC into pragmas
+3) He has identified different possible pragmas. Here some patterns could be identified based on the code (That's the POINT of the paper)
+4) Once we have the pragmas, we can think of an injection machine to produce new code.
+This new code is semantically equivalent to the original one, but not syntactically the same.
+
+Then the core of the paper will be the Different patterns of hand written code that are rewritten (refactored?) with pragmas 
 
 
 
