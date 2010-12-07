@@ -17,7 +17,7 @@
 % constants
 \newcommand{\Title}{Aspect-based refactoring}
 \newcommand{\TitleShort}{\Title}
-\newcommand{\Authors}{Santiago A. Vidal, Claudia Marcos, Alexandre Bergel, Gabriela Ar\'evalo}
+\newcommand{\Authors}{Santiago Vidal, Claudia Marcos, Alexandre Bergel, Gabriela Ar\'evalo}
 \newcommand{\AuthorsShort}{S. Vidal, C. Marcos, A. Bergel, G. Ar\'evalo}
 
 % references
@@ -152,7 +152,8 @@
 \author{\Authors} 
 \authorrunning{\AuthorsShort}
 
-\institute{...\\
+\institute{ISISTAN Research Institute, Faculty of Sciences,\\
+UNICEN University, Campus Universitario, Tandil, Buenos Aires, Argentina\\
 PLEIAD Lab, Department of Computer Science (DCC),\\
 	University of Chile, Santiago, Chile,
 ...}
@@ -182,6 +183,29 @@ Then the core of the paper will be the Different patterns of hand written code t
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Refactoring}\seclabel{refactoring}
+
+The goal of the refactorization was the separation of the cache code
+from the main class of \emph{Mondrian}: \emph{MOGraphElement} and
+its subclasses. The refactoring process began with the identification
+of the caches and the places where they were used. Six different caches
+were found: \emph{cacheShapeBounds}, \emph{cacheForm}, \emph{boundsCache},
+\emph{absoluteBoundsCache}, \emph{elementsToDisplayCache}, and \emph{lookupNodeCache}.
+Each of them has a different internal structure according on what
+is stored. After this initial identification, the fragment of codes
+in wich the caches were used were grouped together based on the purpose
+of its use. The main general purposes identified were:
+\begin{itemize}
+\item Initialize or reset the cache.
+\item Get the data stored in the cache.
+\item Store data in the cache.
+\end{itemize}
+The task of group was achieved with the goal of identifying possible
+strategies for refactoring. In this line, some subgroups were found.
+These subgroups allowed the identification of code patterns that were
+repeated in the use of the caches. Next, the main code pattern are
+presented.
+
+PONER CADA PATTERN Y CANTIDAD DE OCURRENCIAS.
 
 \paragraph{What we would like to have}\ \\
 The programmer, instead of writting:
