@@ -184,16 +184,17 @@ Then the core of the paper will be the Different patterns of hand written code t
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Refactoring}\seclabel{refactoring}
 
-The goal of the refactorization was the separation of the cache code
+The goal of the refactorization was the separation of the cache concern
 from the main class of \emph{Mondrian}: \emph{MOGraphElement} and
-its subclasses. The refactoring process began with the identification
-of the caches and the places where they were used. Six different caches
-were found: \emph{cacheShapeBounds}, \emph{cacheForm}, \emph{boundsCache},
-\emph{absoluteBoundsCache}, \emph{elementsToDisplayCache}, and \emph{lookupNodeCache}.
-Each of them has a different internal structure according on what
-is stored. After this initial identification, the fragment of codes
-in wich the caches were used were grouped together based on the purpose
-of its use. The main general purposes identified were:
+its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}).
+The refactoring process began with the identification of the caches
+and the places where they were used. Six different caches were found:
+\emph{cacheShapeBounds}, \emph{cacheForm}, \emph{boundsCache}, \emph{absoluteBoundsCache},
+\emph{elementsToDisplayCache}, and \emph{lookupNodeCache}. Each of
+them has a different internal structure according on what is stored.
+After this initial identification, the fragment of codes in wich the
+caches were used were grouped together based on the purpose of its
+use. The main general purposes identified were:
 \begin{itemize}
 \item Initialize or reset the cache.
 \item Get the data stored in the cache.
@@ -202,10 +203,101 @@ of its use. The main general purposes identified were:
 The task of group was achieved with the goal of identifying possible
 strategies for refactoring. In this line, some subgroups were found.
 These subgroups allowed the identification of code patterns that were
-repeated in the use of the caches. Next, the main code pattern are
-presented.
+repeated in the use of the caches. Once the patterns were identified,
+a refactoring strategy was applied. These steps are described in the
+following subsections.
 
-PONER CADA PATTERN Y CANTIDAD DE OCURRENCIAS.
+
+\subsection{Pattern Identification}
+
+In this section, the main code pattern are presented. For each pattern
+the following presentation structure is used:
+\begin{itemize}
+\item Name of the pattern.
+\item Brief description of the pattern and typical situations in which it
+appears.
+\item Number of occurrences.
+\item Code Example
+\end{itemize}
+The purpose of the code examples is to illustrate the occurrences
+of each pattern in the proper context. 
+
+Following, the patterns are presented ordered by the number of occurrences.
+
+\emph{Reset Cache}: this pattern represents a situation in which a
+cache is resetted. The reset structure is \emph{cache:=resetValue}
+where \emph{resetValue} depends on the cache internal structure. Typically,
+the \emph{resetValue} is nill or a new of a kind of Dictionary object.
+Fourteen ocurrences of this pattern were found in the Mondrian code.
+Next, the method \emph{resetCache} is presented as an example. In
+this method the \emph{Reset Cache} pattern is repeated in four occasions
+to reset the caches \emph{boundsCache}, \emph{absoluteBoundsCache},
+\emph{cacheShapeBounds}, and \emph{elementsToDisplayCache}.
+
+\begin{lstlisting} 
+MOGraphElement>>resetCache 
+	self resetElementsToLookup.
+	boundsCache := nil. 
+	absoluteBoundsCache := nil. 
+	cacheShapeBounds := SmallDictionary new. 
+	elementsToDisplayCache := nil. 
+	self resetMetricCaches
+\end{lstlisting}
+
+\emph{Return Cache with Precondition Checking}: this pattern shows
+the situation in which a verification is accomplished before access
+to a cache with the goal of avoid possible exceptions when the cache
+is nill. Tipically, the structure of this pattern is: \emph{if (cache==nill)
+cache:=newValue. return cache}. Four ocurrences of this pattern were
+found in the Mondrian code. Next, the method \emph{bounds} is presented
+as an example in which boundsCache is accesed.
+
+\begin{lstlisting}
+MOEdge>>bounds
+	^ boundsCache ifNil: [ boundsCache := self shape computeBoundsFor: self ].
+\end{lstlisting}
+
+\emph{Cache Initialization}: this pattern represents a situation in
+which a value is asigned to a cache. The struture of the pattern is
+only an assignation: cache:=\emph{aValue}. This pattern was found
+in two occasions. Next, the method \emph{cacheCanvas} is presented
+as an example in which a value is assigned to cacheForm.
+
+\begin{lstlisting}
+ MOGraphElement>>cacheCanvas: aCanvas 
+	cacheForm := aCanvas form copy: ((self bounds origin + aCanvas origin - (1@1))
+			extent: (self bounds extent + (2@2))). 
+\end{lstlisting}
+
+\emph{Return Cache}: this pattern shows the situation in which a cache
+is accesed. The structure of the pattern is the return of the cache:
+\emph{return cahe}. This pattern was found in two occasions. Next,
+the method \emph{shapeBounds} is presented as an example in which
+cacheShapeBounds is accesed.
+
+\begin{lstlisting} 
+MOGraphElement>>shapeBounds 
+	^ cacheShapeBounds 
+\end{lstlisting}
+
+Fig. \ref{fig:Pattern-locations-in} shows in which methods the
+patterns were found.%
+\begin{figure}
+\begin{centering}
+\includegraphics[scale=0.9]{PatternLocation}
+\par\end{centering}
+
+\caption{Pattern locations in MOGraphElement hierarchy.\label{fig:Pattern-locations-in}}
+
+
+
+\end{figure}
+
+\subsection{Refactoring Strategy}
+
+Una vez que describi a todos podria decir cual fue la estrategia de
+refactorizacion que seguimos y mostar la solucion para cada uno de
+los ejemplos de codigo que puse
 
 \paragraph{What we would like to have}\ \\
 The programmer, instead of writting:
