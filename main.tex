@@ -198,11 +198,11 @@ justificar el xq se quiere refactorizar los cache
 \section{Modularly defining caches in Mondrian}\seclabel{problem}
 
 \paragraph{Context.} Mondrian\footnote{\url{http://www.moosetechnology.org/tools/mondrian}}~\cite{Meye06a} is an open and agile visualization library. 
-Mondrian uses a graph, made of possibly nested nodes and edges, to describe a visualization. Mondrian is a crucial component which is used in more than a dozen of independent projects. To meet clients performance requirements, Mondrian's authors are paying a great attention to provide fast and scalable rendering. To that purpose, Mondrian contains a number of cache mechanisms to avoid redundant code executions. These caches were introduced gradually, according to the emerging requirements.
+Mondrian uses a graph, made of possibly nested nodes and edges, to describe a visualization. Mondrian is a crucial component which is used in more than a dozen of independent projects. To meet clients performance requirements, Mondrian's authors are paying a great attention to provide fast and scalable rendering. To that purpose, Mondrian contains a number of cache mechanisms to avoid redundant code executions. These caches were introduced gradually, according to emerging requirements.
 
-Mondrian is now on the verge to become a visualization engine framework (versus a library as it is currently). Mondrian is now used in situations that were not originally planned. For example, Mondrian has been used to visualize the behavior of animated robots, whereas Mondrian has been originally designed to visualize software on polymetric views~\cite{Lanz03d}. The caches that are intensively used when visualizing software are not useful and may even be a source of slowdown and complexity and visualizing animated robots. 
+Mondrian is now on the verge to become a visualization engine framework versus a library as it is currently. Mondrian is now used in situations that were not originally planned. For example, Mondrian has been used to visualize the behavior of animated robots, whereas Mondrian has been originally designed to visualize software source code~\cite{Lanz03d}. The caches that are intensively used when visualizing software are not useful and may even be a source of slowdown and complexity when visualizing animated robots. 
 
-The future Mondrian framework must offer the possibility of selectively using and combing caches.
+The future Mondrian framework must offer the possibility of selectively using and combining caches.
 
 \paragraph{Problem.}
 
@@ -540,6 +540,11 @@ properly in more than 80\% of the methods of the MOGraphElement hierarchy.
 All the other uses of the caches (those that are not encapsulated
 by patterns) are also refactored by means of pragmas. The code contained
 in the before and after clauses is is defined for each case.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Benefits}\seclabel{benefits}
+
+\ab{What are the benefits of the approach? Can I unplug cache?}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Conclusion}\seclabel{conclusion}
