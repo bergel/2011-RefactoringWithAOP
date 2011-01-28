@@ -139,6 +139,8 @@
 
 \newcommand{\seclabel}[1]{\label{sec:#1}}
 \newcommand{\secref}[1]{Section~\ref{sec:#1}\xspace}
+\newcommand{\co}[1]{{\sf #1}}
+
 
 % D O C U M E N T
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -618,6 +620,29 @@ and they are finally composed during the injection phase. For example,
 the functionality related to the cache \emph{absoluteBoundsCache}
 is refactored by the patterns \emph{Reset Cache,} \emph{Return Cache
 with Precondition Checking,} and \emph{Cache Initialization}.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Results}\seclabel{results}
+
+\paragraph{Using cache in the main logic}
+This experience has been the opportunity to rethink on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
+
+\begin{lstlisting} 
+MOGraphElement >>bounds
+	...
+	self shapeBoundsAt: self shape ifPresent: [ :b | ^ boundsCache := b ].
+	...
+\end{lstlisting}
+
+\begin{lstlisting} 
+MOGraphElement >>translateAbsoluteCacheBy: aPoint
+	absoluteBoundsCache ifNil: [ ^ self ].
+	absoluteBoundsCache := absoluteBoundsCache translateBy: aPoint
+\end{lstlisting}
+
+The core of Mondrian is not independent of the cache implementation. The logic of Mondrian rely on the cache to implement its semantics. This is obviously wrong and this is situation is marked as a defect\footnote{\url{http://code.google.com/p/moose-technology/issues/detail?id=501}}.
+
+\paragraph{Singularity of \co{\#displayOn:}} Displaying a node uses all the defined caches to have a fast rendering. We were not able to define \co{\#displayOn:} as the result of an automatic composition. \ab{maybe say more? Santiago?}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Benefits}\seclabel{benefits}
