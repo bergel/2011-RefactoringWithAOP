@@ -209,10 +209,10 @@ The future Mondrian framework must offer the possibility of selectively using an
 \paragraph{Problem.}
 
 Modularizing caches cannot be realizing without loosing performances.
-Currently, the caches are implemented by means of a dedicated variable
-that is defined in the MOGraphElement class. That is to say, for each
+Currently, the caches are implemented by means of dedicated instance variables
+ defined in the MOGraphElement class. That is to say, for each
 new cache that is added, a variable must be defined. The basic functionalities
-of the caches are store/get a value and reset. So, if the goal of
+of the caches are store/get a value and reset. The goal of
 the refactorization is the extraction of the \emph{Cache Concern}
 by means of the creation of a specific class to delegate the behavior
 of the caches, it must have these functionalities. For example, could
@@ -244,9 +244,9 @@ being the delay proportional to the number of elements.
 \section{Refactoring}\seclabel{refactoring}
 
 
-The goal of the refactorization is the separation of the \emph{Cache
+The goal of the refactoring is the separation of the \emph{Cache
 Concern} from the main class of \emph{Mondrian}: \emph{MOGraphElement}
-and its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}).
+and its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}, totaling more than 235 methods and 1000 number of lines of codes).
 The refactoring process begins with the identification of the caches.
 This initial identification of the caches is done with the information
 provided by the developers of Mondrian and it lies in to know the
@@ -260,9 +260,9 @@ identification, the fragment of codes in which the caches are used
 are grouped together based on the purpose of its use. As mentioned
 in the previous section, the main general purposes identified are: 
 \begin{itemize}
-\item Initialize and reset the cache. 
-\item Get the data stored in the cache. 
-\item Store data in the cache. 
+\item Initialize and reset the cache
+\item Retrieve the cache value
+\item Store data in the cache
 \end{itemize}
 The task of group the fragments of code of the different caches is
 achieved with the goal of identifying possible strategies for refactoring.
@@ -275,7 +275,7 @@ following subsections.
 
 \subsection{Pattern Description\label{sub:Pattern-Identification}}
 
-In this section, the main code patterns that we identified are presented.
+This section presents the 5 code pattern we identified 
 Each pattern is described with the most relevant typical occurrence,
 the number of occurrences of the pattern and a code example. The purpose
 of the code examples is to illustrate the occurrences of each pattern
@@ -301,7 +301,7 @@ MOGraphElement>>resetCache
 	self resetMetricCaches
 \end{lstlisting}
 
-\emph{Return Cache with Precondition Checking}: this pattern shows
+\emph{\chg{Return Cache with Precondition Checking}{Lazy initialization}}: this pattern shows
 the situation in which a verification is accomplished before access
 to a cache with the goal of avoid possible exceptions when the cache
 is nil. Typically, the structure of this pattern is: \emph{if (cache==nil)
@@ -337,8 +337,8 @@ MOGraphElement>>shapeBounds
 	^ cacheShapeBounds
 \end{lstlisting}
 
-\emph{Cache Loaded}: this pattern check is a cache or a group of them
-are loaded or conversely, if they are nil. So, the structure of the
+\emph{Cache Loaded}: this pattern check\ins{s} \chg{is}{whether} \chg{a cache or a group of them}{one cache or more}
+are \chg{loaded}{initialized} or conversely, if they are \ins{not?} nil. So, the structure of the
 pattern for a single cache is \emph{cache != nil}. This pattern is
 found in two occasions. Next the method \emph{isCacheLoaded} is presented
 as an example of this pattern.
@@ -401,7 +401,7 @@ Once the code patterns are identified, strategies to refactor them
 are established. The main constraint to refactoring the code is the
 preservation of a good performance of the cache mechanism.
 
-Several alternatives were explored to encapsulated the \emph{Cache
+Several alternatives were explored to encapsulate\del{d} the \emph{Cache
 Concern}. For example, one of the explored mechanisms was the separation
 of the concern by means of the definition of an exclusive class for
 managing caches. While this solution provided a good modular design,
@@ -427,9 +427,10 @@ according to each code pattern.\emph{ }In general, the pragmas structure
 is \emph{$<$patternCodeName: cacheName$>$} where \emph{cacheName}
 indicates the name of the cache that will be injected and \emph{patternCodeName}
 indicates the pattern code to be generated. For example, the pragma
-\emph{$<$ReturnCachePatternForCache: \#cacheShapeBounds$>$} indicates
+\emph{$<$ReturnCachePatternForCache: \#cacheShapeBounds$>$} \ab{I suggest to remove all ForCache: from the patternCodeName. I see a redundancy here} indicates
 that the \emph{Return Cache} pattern will be injected for the cache
 \emph{cacheShapeBounds} in the method in which the pragma is defined.
+\ab{Ok, but what about BeforeResetCache as said below. It is not one of the 5 patterns we have described earlier}
 
 Once that the cache code is extracted into the pragmas, the code to
 be injected is automatically generated before the execution of the
@@ -440,21 +441,21 @@ is achieved following the next steps:
 the pragma but with the prefix {}``compute'' plus the name of the
 class in which is defined. For example, if the name of the method
 is absoluteBounds and it is defined in \emph{MOGraphElement} class,
-a new method called computeMOGraphElementAbsoluteBounds is created. 
-\item The code of the original method is copied into the new method. 
+a new method called computeMOGraphElementAbsoluteBounds is created. \ab{add example}
+\item The code of the original method is copied into the new method. \ab{add example}
 \item The code inside the original method is replaced by the code automatically
 generated according to the pattern defined in the pragma. This generated
-method contains a call to the new method of the Step 1. 
+method contains a call to the new method of the Step 1. \ab{add example}
 \end{enumerate}
 In this way, the refactorized cache code is executed with Mondrian.
-The whole injection mechanism is summarized in Fig. \ref{fig:Injection-mechanism.}.
+The whole injection mechanism is summarized in Fig. \ref{fig:Injection-mechanism.}.\ab{I would remove the figure. It does not say much}
 %
 \begin{figure}
 \begin{centering}
 \includegraphics[scale=0.8]{InjectionMechanism} 
 \par\end{centering}
 
-\caption{Injection mechanism.\label{fig:Injection-mechanism.}}
+\caption{Injection mechanism.\label{fig:Injection-mechanism.}\ab{I would remove the figure. It is not really helpful.}}
 
 \end{figure}
 
@@ -473,19 +474,19 @@ added to the system. This class hierarchy is shown in Fig. \ref{fig:Pattern-hier
 \includegraphics{PatternInheritance}
 \par\end{centering}
 
-\caption{Pattern hierarchy.\label{fig:Pattern-hierarchy.}}
+\caption{Pattern hierarchy. \ab{Maybe move this figure to the discussion section or at the end of the section} \label{fig:Pattern-hierarchy.}}
 
 \end{figure}
 
 
-Next, the refactorizations applied to each code pattern are presented.
+Next, the refactorings applied to each code pattern are presented.
 
 \emph{Reset Cache}: In order to refactor this pattern each statement
 that resets a cache was extracted using a pragma. The pragma contains
 the cache to be resetted. Owing to in some cases the resets are done
 at the beginning of a method and others at the end, a hierarchy of
 Reset Cache pattern is created. As is shown in Fig. \ref{fig:Pattern-hierarchy.},
-this hierarchy is compose by the classes \emph{AbstractResetCachePattern},
+this hierarchy is compose\ins{d} \chg{by}{of} the classes \emph{AbstractResetCachePattern},
 \emph{BeforeResetCachePattern}, and \emph{AfterResetCachePattern}.
 The pragmas are defined in the classes at the bottom of the hierarchy
 as $<$BeforeResetCachePatternForCache: cacheName$>$ and $<$AfterResetCachePatternForCache:
@@ -508,6 +509,8 @@ MOGraphElement>>resetCache
 	self resetElementsToLookup. 
 	self resetMetricCaches
 \end{lstlisting}
+
+\ab{What about resetElementsToLookup and resetMetricCaches? Shouldn't we talk about them?}
 
 After the code injection the resetCache method is transformed into:
 
@@ -588,7 +591,7 @@ MOGraphElement>>isCacheLoaded
 	<CacheLoadedPatternForCache: #cacheForm>
 \end{lstlisting}
 
-With the use of these patterns the \emph{Cache Concern} is refactorized
+\ab{This section is important. Can you provide an example? Why some of the methods cannot be restructured? displayOn: is one of them} With the use of these patterns the \emph{Cache Concern} is refactorized
 properly in more than 85\% of the methods of the MOGraphElement hierarchy.
 All the other uses of the caches (those that are not encapsulated
 by patterns) are also refactored by means of pragmas. For these cases
@@ -601,6 +604,13 @@ That is to say, the code inside the original method will be replaced
 by the code pointed out in the before clause of the pragma, a call
 to the new method will be added, and the code contained in the after
 clause of the pragma will be added at the end.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Results}\seclabel{results}
+
+\ab{We also need to provide some benchmarks. There is a class in mondrian that does exactly this}
+
+\ab{We need to be stronger on this section}
 
 The use of the presented patterns could be used to compose the caches
 behavior improving the maintenance of the system. In this line, the
@@ -621,8 +631,6 @@ the functionality related to the cache \emph{absoluteBoundsCache}
 is refactored by the patterns \emph{Reset Cache,} \emph{Return Cache
 with Precondition Checking,} and \emph{Cache Initialization}.
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-\section{Results}\seclabel{results}
 
 \paragraph{Using cache in the main logic}
 This experience has been the opportunity to rethink on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
@@ -645,9 +653,15 @@ The core of Mondrian is not independent of the cache implementation. The logic o
 \paragraph{Singularity of \co{\#displayOn:}} Displaying a node uses all the defined caches to have a fast rendering. We were not able to define \co{\#displayOn:} as the result of an automatic composition. \ab{maybe say more? Santiago?}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-\section{Benefits}\seclabel{benefits}
+\section{Discussion}\seclabel{discussion}
 
 \ab{What are the benefits of the approach? Can I unplug cache?}
+
+The injection mechanism may reorder statements in the instrumented method. This is the case of... \ab{add example}.
+
+\ab{How many occurrences of statement reordering?}
+
+However, in practice, this has not caused any noticeable problem. The extensive test set of Mondrian remained green after the instrumentation.
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Conclusion}\seclabel{conclusion}
