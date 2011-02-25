@@ -13,7 +13,8 @@
 \usepackage{needspace}
 \usepackage{microtype}
 \usepackage{bold-extra}
-
+\usepackage{array}
+\usepackage{epstopdf}
 % constants
 \newcommand{\Title}{Aspect-based refactoring}
 \newcommand{\TitleShort}{\Title}
@@ -233,7 +234,7 @@ being the delay proportional to the number of elements.
 %
 \begin{figure}
 \begin{centering}
-\includegraphics{CacheMechanisms} 
+\includegraphics[bb=27bp 615bp 338bp 762bp,scale=0.97]{CacheMechanisms} 
 \par\end{centering}
 
 \caption{Cache behavior delegation.\label{fig:Cache-behaviour-delegation.}}
@@ -301,7 +302,8 @@ MOGraphElement>>resetCache
 	self resetMetricCaches
 \end{lstlisting}
 
-\emph{\chg{Return Cache with Precondition Checking}{Lazy initialization}}: this pattern shows
+\emph{
+ initialization}: this pattern shows
 the situation in which a verification is accomplished before access
 to a cache with the goal of avoid possible exceptions when the cache
 is nil. Typically, the structure of this pattern is: \emph{if (cache==nil)
@@ -337,8 +339,8 @@ MOGraphElement>>shapeBounds
 	^ cacheShapeBounds
 \end{lstlisting}
 
-\emph{Cache Loaded}: this pattern check\ins{s} \chg{is}{whether} \chg{a cache or a group of them}{one cache or more}
-are \chg{loaded}{initialized} or conversely, if they are \ins{not?} nil. So, the structure of the
+\emph{Cache Loaded}: this pattern checks whether one cache or more
+are initialized or conversely, if they are not nil. So, the structure of the
 pattern for a single cache is \emph{cache != nil}. This pattern is
 found in two occasions. Next the method \emph{isCacheLoaded} is presented
 as an example of this pattern.
@@ -352,7 +354,7 @@ Fig. \ref{fig:Pattern-locations-in} shows in which methods the patterns
 were found.%
 \begin{figure}
 \begin{centering}
-\includegraphics[scale=0.9]{PatternLocation} 
+\includegraphics[bb=186bp 306bp 457bp 644bp,scale=0.9]{PatternLocation} 
 \par\end{centering}
 
 \caption{Pattern locations in MOGraphElement hierarchy.\label{fig:Pattern-locations-in}}
@@ -376,7 +378,7 @@ Cache  & Occurrences  & Methods involved  & Caches involved\tabularnewline
 \emph{Reset Cache}  & 18 & 10 & boundsCache, absoluteBoundsCache, cacheShapeBounds, elementsToDisplayCache,
 cacheForm, cacheFromPoint, cacheToPoint\tabularnewline
 \hline 
-\emph{Return Cache with Precondition Checking}  & 5 & 5 & elementsToDisplayCache, absoluteBoundsCache, boundsCache, cacheBounds\tabularnewline
+\emph{Lazy Initialization}  & 5 & 5 & elementsToDisplayCache, absoluteBoundsCache, boundsCache, cacheBounds\tabularnewline
 \hline 
 \emph{Cache Initialization}  & 3 & 3 & cacheForm, cacheFromPoint, cacheToPoint\tabularnewline
 \hline 
@@ -401,7 +403,7 @@ Once the code patterns are identified, strategies to refactor them
 are established. The main constraint to refactoring the code is the
 preservation of a good performance of the cache mechanism.
 
-Several alternatives were explored to encapsulate\del{d} the \emph{Cache
+Several alternatives were explored to encapsulate the \emph{Cache
 Concern}. For example, one of the explored mechanisms was the separation
 of the concern by means of the definition of an exclusive class for
 managing caches. While this solution provided a good modular design,
@@ -427,9 +429,9 @@ according to each code pattern.\emph{ }In general, the pragmas structure
 is \emph{$<$patternCodeName: cacheName$>$} where \emph{cacheName}
 indicates the name of the cache that will be injected and \emph{patternCodeName}
 indicates the pattern code to be generated. For example, the pragma
-\emph{$<$ReturnCachePatternForCache: \#cacheShapeBounds$>$} \ab{I suggest to remove all ForCache: from the patternCodeName. I see a redundancy here} indicates
-that the \emph{Return Cache} pattern will be injected for the cache
-\emph{cacheShapeBounds} in the method in which the pragma is defined.
+\emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates
+that the \emph{Lazy Initialization} pattern will be injected for the cache
+\emph{absoluteBoundsCache} in the method in which the pragma is defined.
 \ab{Ok, but what about BeforeResetCache as said below. It is not one of the 5 patterns we have described earlier}
 
 Once that the cache code is extracted into the pragmas, the code to
@@ -439,26 +441,31 @@ is achieved following the next steps:
 \begin{enumerate}
 \item A new method is created with the same name that the method that contains
 the pragma but with the prefix {}``compute'' plus the name of the
-class in which is defined. For example, if the name of the method
-is absoluteBounds and it is defined in \emph{MOGraphElement} class,
-a new method called computeMOGraphElementAbsoluteBounds is created. \ab{add example}
-\item The code of the original method is copied into the new method. \ab{add example}
+class in which is defined. For example, given the next method
+\begin{lstlisting} 
+MOGraphElement>>absoluteBounds
+	<LazyInitializationPattern: #absoluteBoundsCache> 
+	^ self shape absoluteBoundsFor: self
+\end{lstlisting}
+a new method called computeMOGraphElementAbsoluteBounds is created as is shown below.
+\begin{lstlisting} 
+MOGraphElement>>computeMOGraphElementAbsoluteBounds
+\end{lstlisting}
+\item The code of the original method is copied into the new method.
+\begin{lstlisting} 
+MOGraphElement>>computeMOGraphElementAbsoluteBounds
+	^ self shape absoluteBoundsFor: self
+\end{lstlisting}
 \item The code inside the original method is replaced by the code automatically
 generated according to the pattern defined in the pragma. This generated
-method contains a call to the new method of the Step 1. \ab{add example}
+method contains a call to the new method of the Step 1.
+\begin{lstlisting} 
+MOGraphElement>>absoluteBounds
+	absoluteBoundsCache ifNotNil: [ ^absoluteBoundsCache].
+	^ absoluteBoundsCache:=(self computeMOGraphElementabsoluteBounds)
+\end{lstlisting}
 \end{enumerate}
 In this way, the refactorized cache code is executed with Mondrian.
-The whole injection mechanism is summarized in Fig. \ref{fig:Injection-mechanism.}.\ab{I would remove the figure. It does not say much}
-%
-\begin{figure}
-\begin{centering}
-\includegraphics[scale=0.8]{InjectionMechanism} 
-\par\end{centering}
-
-\caption{Injection mechanism.\label{fig:Injection-mechanism.}\ab{I would remove the figure. It is not really helpful.}}
-
-\end{figure}
-
 
 In order to automatically generate the code to be injected, the injector
 code mechanism provides a \emph{CachePattern} interface. In this way,
@@ -471,7 +478,7 @@ added to the system. This class hierarchy is shown in Fig. \ref{fig:Pattern-hier
 %
 \begin{figure}
 \begin{centering}
-\includegraphics{PatternInheritance}
+\includegraphics[bb=21bp 541bp 561bp 789bp,scale=0.7]{PatternInheritance}
 \par\end{centering}
 
 \caption{Pattern hierarchy. \ab{Maybe move this figure to the discussion section or at the end of the section} \label{fig:Pattern-hierarchy.}}
@@ -486,10 +493,10 @@ that resets a cache was extracted using a pragma. The pragma contains
 the cache to be resetted. Owing to in some cases the resets are done
 at the beginning of a method and others at the end, a hierarchy of
 Reset Cache pattern is created. As is shown in Fig. \ref{fig:Pattern-hierarchy.},
-this hierarchy is compose\ins{d} \chg{by}{of} the classes \emph{AbstractResetCachePattern},
+this hierarchy is composed of the classes \emph{AbstractResetCachePattern},
 \emph{BeforeResetCachePattern}, and \emph{AfterResetCachePattern}.
 The pragmas are defined in the classes at the bottom of the hierarchy
-as $<$BeforeResetCachePatternForCache: cacheName$>$ and $<$AfterResetCachePatternForCache:
+as $<$BeforeResetCachePattern: cacheName$>$ and $<$AfterResetCachePattern:
 cacheName$>$ respectively. For example, in the case presented in Section
 \ref{sub:Pattern-Identification} of the method \emph{resetCache},
 a pragma is defined for each reset of a cache leaving a cleaner code
@@ -502,15 +509,16 @@ in the pragma. Following, the refactored code is presented:
 
 \begin{lstlisting} 
 MOGraphElement>>resetCache 
-	<BeforeResetCachePatternForCache: #absoluteBoundsCache> 
-	<BeforeResetCachePatternForCache: #elementsToDisplayCache>
-	<BeforeResetCachePatternForCache: #boundsCache> 
-	<BeforeResetCachePatternForCache: #cacheShapeBounds> 
+	<BeforeResetCachePattern: #absoluteBoundsCache> 
+	<BeforeResetCachePattern: #elementsToDisplayCache>
+	<BeforeResetCachePattern: #boundsCache> 
+	<BeforeResetCachePattern: #cacheShapeBounds> 
 	self resetElementsToLookup. 
 	self resetMetricCaches
 \end{lstlisting}
 
-\ab{What about resetElementsToLookup and resetMetricCaches? Shouldn't we talk about them?}
+The methods \emph{resetElementsToLookup} and \emph{resetMetricCaches} 
+performs additional activities that do not involve the cache variables. For this reason they remain in the \emph{resetCache} method.
 
 After the code injection the resetCache method is transformed into:
 
@@ -534,9 +542,9 @@ MOGraphElement>>computeMOGraphElementresetCache
 This mechanism of injection of the generated code is the same for
 the rest of the patterns.
 
-\emph{Return Cache with Precondition Checking}: To refactor this pattern
+\emph{Lazy Initialization}: To refactor this pattern
 the precondition checking is encapsulated into a pragma defined as
-$<$ReturnCacheWithPreconditionCheckingPattern: cacheName$>$. Given that
+$<$LazyInitializationPattern: cacheName$>$. Given that
 the cache is initialized with a value when the precondition fails,
 the original method is modified to return this value. For example,
 in the case of the \emph{bounds} method presented in the previous
@@ -546,7 +554,7 @@ shown the code below:
 
 \begin{lstlisting} 
 MOEdge>>bounds 
-	<ReturnCacheWithPreconditionCheckingPattern: #boundsCache> 
+	<LazyInitializationPattern: #boundsCache> 
 	self shape computeBoundsFor: self. 
 \end{lstlisting}
 
@@ -558,43 +566,57 @@ boundsCache:= computeMOEdgeBounds.}
 similar to the last one. Given that the structure of the pattern is
 an assignation, the first section of the assignation (\emph{cacheName:=})
 will be generated automatically by the code injection mechanism using
-a pragma defined as $<$CacheInicializationPatternForCache: cacheName$>$.
+a pragma defined as $<$CacheInicializationPattern: cacheName$>$.
 So, only the value at which is initialized remains in the method.
 In the case of the example presented in Section \ref{sub:Pattern-Identification},
 the refactored code is shown below:
 
 \begin{lstlisting} 
 MOGraphElement>>cacheCanvas: aCanvas 
-	<CacheInicializationPatternForCache: #cacheForm>  
+	<CacheInicializationPattern: #cacheForm>  
 	(aCanvas form copy: ((self bounds origin + aCanvas origin
 	- (1@1)) extent: (self bounds extent + (2@2)))). 
 \end{lstlisting}
 
 \emph{Return Cache}: In this refactorization the entire return clause
-is encapsulated by the pragma. The pragma is defined as $<$ReturnCacheWithPreconditionCheckingPattern:
+is encapsulated by the pragma. The pragma is defined as $<$ReturnCachePattern:
 cacheName$>$. Following, the refactored code for the example shown in
 the last section is presented:
 
 \begin{lstlisting}
  MOGraphElement>>shapeBounds 
-	<ReturnCachePatternForCache: #cacheShapeBounds> 
+	<ReturnCachePattern: #cacheShapeBounds> 
 \end{lstlisting}
 
 \emph{Cache Loaded:} In order to refactor this pattern the cache checking
-is encapsulated by a pragma defined as $<$CacheLoadedPatternForCache:
+is encapsulated by a pragma defined as $<$CacheLoadedPattern:
 cacheName$>$. The code generated contains a sentence in which the checking
 is done for all the caches defined in the pragmas of this pattern
 contained in a method. In the case of the example presented in Section
 \ref{sub:Pattern-Identification}, the refactored code is shown below:
 \begin{lstlisting} 
 MOGraphElement>>isCacheLoaded 
-	<CacheLoadedPatternForCache: #cacheForm>
+	<CacheLoadedPattern: #cacheForm>
 \end{lstlisting}
 
-\ab{This section is important. Can you provide an example? Why some of the methods cannot be restructured? displayOn: is one of them} With the use of these patterns the \emph{Cache Concern} is refactorized
+With the use of these patterns the \emph{Cache Concern} is refactorized
 properly in more than 85\% of the methods of the MOGraphElement hierarchy.
-All the other uses of the caches (those that are not encapsulated
-by patterns) are also refactored by means of pragmas. For these cases
+The main reason because some of the uses of the caches are not encapsulated by means of 
+cache patterns are (1) the code belongs to a cache pattern but the code related with the cache is too mixed 
+with the main concern, or (2) the code does not match with any of the patterns described. For example the method
+\begin{lstlisting} 
+MOGraphElement>>nodeWith: anObject ifAbsent: aBlock  
+	| nodeLookedUp |
+	lookupNodeCache ifNil: [ lookupNodeCache := IdentityDictionary new ].
+	lookupNodeCache at: anObject ifPresent: [ :v | ^ v ].
+	nodeLookedUp := self nodes detect: [:each | each model = anObject ] ifNone: aBlock.
+	lookupNodeCache at: anObject put: nodeLookedUp.
+	^ nodeLookedUp
+\end{lstlisting}
+could not been refactored because the cache \emph{lookupNodeCache} is used to make different computations across the whole
+method by which is closely tied to the main concern. 
+These uses of the caches that are not encapsulated
+by patterns are also refactored by means of pragmas. For these cases
 a \emph{Generic AOP} pattern is used. The pragmas used have the structure
 \emph{$<$cache: cacheName before: '' after: ''$>$} where \emph{cache}
 indicates the name of the cache that will be injected. The clauses
@@ -603,7 +625,17 @@ when it will be injected in regard to the execution of the method.
 That is to say, the code inside the original method will be replaced
 by the code pointed out in the before clause of the pragma, a call
 to the new method will be added, and the code contained in the after
-clause of the pragma will be added at the end.
+clause of the pragma will be added at the end. For example, the refactorization of the method presented previously is
+\begin{lstlisting} 
+MOGraphElement>>nodeWith: anObject ifAbsent: aBlock  
+	<cache: #lookupNodeCache before:'	lookupNodeCache ifNil: [lookupNodeCache := IdentityDictionary new ]. 			
+	lookupNodeCache at: anObject ifPresent: [ :v | ^ v ]. 
+	^lookupNodeCache at: anObject put: (' after: ' )'>
+	| nodeLookedUp |
+	nodeLookedUp := self nodes detect: [:each | each model = anObject ] ifNone: aBlock.
+	^ nodeLookedUp
+\end{lstlisting}
+As can be seen, all the setences with references to the cache  \emph{lookupNodeCache} are encapsulated into the before clause of the pragma.
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Results}\seclabel{results}
@@ -628,9 +660,10 @@ helps the developer by splitting the caches behavior is smalls fragments
 of code. These fragments of code are encapsulated by the patterns
 and they are finally composed during the injection phase. For example,
 the functionality related to the cache \emph{absoluteBoundsCache}
-is refactored by the patterns \emph{Reset Cache,} \emph{Return Cache
-with Precondition Checking,} and \emph{Cache Initialization}.
+is refactored by the patterns \emph{Reset Cache,} \emph{Lazy Initialization}, and \emph{Cache Initialization}.
 
+One of the main priorities during the refactorization process was not to affect the performance of the system. 
+For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations observed between the system before and after applying refactorings are not significant. The details of the benchmarks results can be found in the appendix. 
 
 \paragraph{Using cache in the main logic}
 This experience has been the opportunity to rethink on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
@@ -677,6 +710,111 @@ However, in practice, this has not caused any noticeable problem. The extensive 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \bibliographystyle{splncs}
 \bibliography{scg}
+
+\begin{table}
+\begin{centering}
+\begin{tabular}{|>{\centering}p{1.8cm}|c|>{\centering}p{4cm}|>{\centering}p{4cm}|}
+\hline 
+Kind of benchmark & Nodes/Nodes & Time before refactorization (ms) & Time after refactorization (ms)\tabularnewline
+\hline
+\hline 
+Nodes & 100  & 13,6 & 13,9\tabularnewline
+\cline{2-4} 
+ & 200 & 23,3 & 21,9\tabularnewline
+\cline{2-4} 
+ & 300 & 23,2 & 18,8\tabularnewline
+\cline{2-4} 
+ & 400 & 25,2 & 26,5\tabularnewline
+\cline{2-4} 
+ & 500 & 30,2 & 32\tabularnewline
+\cline{2-4} 
+ & 600 & 35,8 & 38,5\tabularnewline
+\cline{2-4} 
+ & 700 & 41,5 & 44,8\tabularnewline
+\cline{2-4} 
+ & 800 & 47,3 & 50,9\tabularnewline
+\cline{2-4} 
+ & 900 & 53,2 & 57,2\tabularnewline
+\cline{2-4} 
+ & 1000 & 59,7 & 63,8\tabularnewline
+\cline{2-4} 
+ & 1600 & 110,7 & 102,7 \tabularnewline
+\cline{2-4} 
+ & 3200 & 256,1 & 209,9 \tabularnewline
+\cline{2-4} 
+ & 6400 & 382,5 & 410,9 \tabularnewline
+\hline 
+Edges & 10 & 2,6 & 2,5\tabularnewline
+\cline{2-4} 
+ & 20 & 7,6 & 8\tabularnewline
+\cline{2-4} 
+ & 30 & 16,4 & 17,1\tabularnewline
+\cline{2-4} 
+ & 40 & 37 & 37,5\tabularnewline
+\cline{2-4} 
+ & 50 & 121,8 & 43,8\tabularnewline
+\cline{2-4} 
+ & 60 & 63,9 & 83\tabularnewline
+\cline{2-4} 
+ & 70 & 83,3 & 150\tabularnewline
+\cline{2-4} 
+ & 80 & 110,3 & 109,5 \tabularnewline
+\cline{2-4} 
+ & 90 & 143,3 & 149,2 \tabularnewline
+\cline{2-4} 
+ & 100 & 269,9 & 192,3 \tabularnewline
+\cline{2-4} 
+ & 200 & 1132,3 & 1195,5 \tabularnewline
+\cline{2-4} 
+ & 300 & 4122,4 & 3645,4\tabularnewline
+\hline 
+Inner nodes & 5 & 159,6 & 159,7\tabularnewline
+\cline{2-4} 
+ & 10 & 2190,4 & 2212,5\tabularnewline
+\cline{2-4} 
+ & 15 & 10564,3 & 10666\tabularnewline
+\hline 
+Displaying  & 5 & 230,7 & 298,1\tabularnewline
+\cline{2-4} 
+inner nodes & 10 & 948,7 & 965,4\tabularnewline
+\cline{2-4} 
+ & 15 & 10314,2 & 10053,6 \tabularnewline
+\hline 
+Displaying  & 1 & 10,4 & 9,9\tabularnewline
+\cline{2-4} 
+inner nodes & 2 & 270,7 & 260,1\tabularnewline
+\cline{2-4} 
+and edges & 3 & 3827,1 & 3677,5\tabularnewline
+\cline{2-4} 
+ & 4 & 37536,7 & 36337,3 \tabularnewline
+\hline 
+Displaying & 100 & 4,2 & 5,1\tabularnewline
+\cline{2-4} 
+elementAt & 500 & 6,9 & 7,6\tabularnewline
+\cline{2-4} 
+ & 1000 & 10,4 & 10,3\tabularnewline
+\cline{2-4} 
+ & 1500 & 13,4 & 13,4\tabularnewline
+\cline{2-4} 
+ & 2000 & 16,2 & 17\tabularnewline
+\cline{2-4} 
+ & 2500 & 19,9 & 20,9\tabularnewline
+\hline 
+Small nodes & 2000 & 3738,2 & 3685,3\tabularnewline
+\hline 
+Edges bounds & 500 & 161,2 & 156,8\tabularnewline
+\hline 
+Subnodes lookup & 20000 & 4736,1 & 4624,4\tabularnewline
+\hline
+\end{tabular}
+\par\end{centering}
+
+\caption{Benchmark of perfomance.\label{tab:Benchmark-of-perfomance.}}
+
+
+
+\end{table}
+
 
 \end{document}
 
