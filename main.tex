@@ -1,5 +1,6 @@
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-\documentclass[runningheads]{llncs}
+%\documentclass[runningheads]{llncs}
+\documentclass[preprint,10pt]{sigplanconf}
 
 % packages
 \usepackage{xspace}
@@ -15,11 +16,7 @@
 \usepackage{bold-extra}
 \usepackage{array}
 \usepackage{epstopdf}
-% constants
-\newcommand{\Title}{Aspect-based refactoring}
-\newcommand{\TitleShort}{\Title}
-\newcommand{\Authors}{Santiago Vidal, Claudia Marcos, Alexandre Bergel, Gabriela Ar\'evalo}
-\newcommand{\AuthorsShort}{S. Vidal, C. Marcos, A. Bergel, G. Ar\'evalo}
+
 
 % references
 \usepackage[colorlinks]{hyperref}
@@ -31,9 +28,7 @@
 	linkcolor=black,
 	citecolor=black,
 	plainpages=false,
-	bookmarksopen=true,
-	pdfauthor={\Authors},
-	pdftitle={\Title}}
+	bookmarksopen=true}
 
 \def\chapterautorefname{Chapter}
 \def\appendixautorefname{Appendix}
@@ -150,20 +145,19 @@
 % T I T L E
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-\title{\Title}
-\titlerunning{\TitleShort}
+\title{Aspect-based refactoring}
 
-\author{\Authors} 
-\authorrunning{\AuthorsShort}
+\authorinfo{Santiago Vidal}
+	{ISISTAN Research Institute, Faculty of Sciences, UNICEN University, Campus Universitario, Tandil, Buenos Aires, Argentina, Also CONICET}
+	{svidal@exa.unicen.edu.ar}
+\authorinfo{Claudia Marcos} 
+	{ISISTAN Research Institute, Faculty of Sciences, UNICEN University, Campus Universitario, Tandil, Buenos Aires, Argentina, Also CIC}
+	{cmarcos@exa.unicen.edu.ar}
+\authorinfo{Alexandre Bergel}
+	{PLEIAD Lab, Department of Computer Science (DCC), University of Chile, Santiago, Chile}
+	{abergel@dcc.uchile.cl}
+\authorinfo{Gabriela Ar\'evalo}
 
-\institute{ISISTAN Research Institute, Faculty of Sciences,\\
- UNICEN University, Campus Universitario, Tandil, Buenos Aires,
-Argentina\\
-Also CONICET\\
-Also CIC\\
-PLEIAD Lab, Department of Computer Science (DCC),\\
-	University of Chile, Santiago, Chile,
-...}
 
 \maketitle
 
@@ -232,14 +226,14 @@ when this solution the caches mechanism was 3 to 10 times slower,
 being the delay proportional to the number of elements.
 
 %
-\begin{figure}
+\begin{figure*}
 \begin{centering}
 \includegraphics[bb=27bp 615bp 338bp 762bp,scale=0.97]{CacheMechanisms} 
 \par\end{centering}
 
 \caption{Cache behavior delegation.\label{fig:Cache-behaviour-delegation.}}
 
-\end{figure}
+\end{figure*}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Refactoring}\seclabel{refactoring}
@@ -286,11 +280,12 @@ in the proper context.
 cache is reset. The reset structure is \emph{cache:=resetValue} where
 \emph{resetValue} depends on the cache internal structure. Typically,
 the \emph{resetValue} is nil or a new of a kind of Dictionary object.
-Eighteen occurrences of this pattern are found in the Mondrian code.
+Eighteen occurrences of this pattern are found in the Mondrian code. 
+We found that in some occurrences of this pattern the reset of the caches must be done before the computations executed in the method, and other methods in which the reset must be done at the end. 
 Next, the method \emph{resetCache} is presented as an example. In
 this method the \emph{Reset Cache} pattern is repeated in four occasions
 to reset the caches \emph{boundsCache}, \emph{absoluteBoundsCache},
-\emph{cacheShapeBounds}, and \emph{elementsToDisplayCache}.
+\emph{cacheShapeBounds}, and \emph{elementsToDisplayCache}. In this case, the reset of the caches can be done before or after the execution of the methods \emph{resetElementsToLookup} and  \emph{resetMetricCaches}.
 
 \begin{lstlisting} 
 MOGraphElement>>resetCache 
@@ -352,14 +347,14 @@ MOGraphElement>>isCacheLoaded
 
 Fig. \ref{fig:Pattern-locations-in} shows in which methods the patterns
 were found.%
-\begin{figure}
+\begin{figure*}
 \begin{centering}
-\includegraphics[bb=186bp 306bp 457bp 644bp,scale=0.9]{PatternLocation} 
+\includegraphics[bb=186bp 306bp 497bp 644bp,scale=0.9]{PatternLocation} 
 \par\end{centering}
 
 \caption{Pattern locations in MOGraphElement hierarchy.\label{fig:Pattern-locations-in}}
 
-\end{figure}
+\end{figure*}
 
 
 Additionally, Table \ref{tab:Cache-Concern-scattering} presents a
@@ -368,7 +363,7 @@ the methods involved in each pattern, and the caches related with
 a pattern.
 
 %
-\begin{table}
+\begin{table*}
 \begin{centering}
 \begin{tabular}{|p{2.5cm}|c|c|p{3.5cm}|}
 \hline 
@@ -393,7 +388,7 @@ Total  & 32 & 24 & \multicolumn{1}{c}{}\tabularnewline
 
 \caption{Cache Concern scattering summary.\label{tab:Cache-Concern-scattering}}
 
-\end{table}
+\end{table*}
 
 
 
@@ -432,7 +427,6 @@ indicates the pattern code to be generated. For example, the pragma
 \emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates
 that the \emph{Lazy Initialization} pattern will be injected for the cache
 \emph{absoluteBoundsCache} in the method in which the pragma is defined.
-\ab{Ok, but what about BeforeResetCache as said below. It is not one of the 5 patterns we have described earlier}
 
 Once that the cache code is extracted into the pragmas, the code to
 be injected is automatically generated before the execution of the
@@ -476,14 +470,14 @@ generation of the code sentences to be injected related with the cache
 whereas the interface \emph{CachePattern} creates the methods to be
 added to the system. This class hierarchy is shown in Fig. \ref{fig:Pattern-hierarchy.}.
 %
-\begin{figure}
+\begin{figure*}
 \begin{centering}
 \includegraphics[bb=21bp 541bp 561bp 789bp,scale=0.7]{PatternInheritance}
 \par\end{centering}
 
 \caption{Pattern hierarchy. \ab{Maybe move this figure to the discussion section or at the end of the section} \label{fig:Pattern-hierarchy.}}
 
-\end{figure}
+\end{figure*}
 
 
 Next, the refactorings applied to each code pattern are presented.
@@ -663,7 +657,7 @@ the functionality related to the cache \emph{absoluteBoundsCache}
 is refactored by the patterns \emph{Reset Cache,} \emph{Lazy Initialization}, and \emph{Cache Initialization}.
 
 One of the main priorities during the refactorization process was not to affect the performance of the system. 
-For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations observed between the system before and after applying refactorings are not significant. The details of the benchmarks results can be found in the appendix. 
+For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations observed between the system before and after applying refactorings are not significant. That is because, in general, the code after the injection of the caches is the same that the original code before the Mondrian refactorization. The details of the benchmarks results can be found in the appendix. 
 
 \paragraph{Using cache in the main logic}
 This experience has been the opportunity to rethink on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
@@ -683,14 +677,14 @@ MOGraphElement >>translateAbsoluteCacheBy: aPoint
 
 The core of Mondrian is not independent of the cache implementation. The logic of Mondrian rely on the cache to implement its semantics. This is obviously wrong and this is situation is marked as a defect\footnote{\url{http://code.google.com/p/moose-technology/issues/detail?id=501}}.
 
-\paragraph{Singularity of \co{\#displayOn:}} Displaying a node uses all the defined caches to have a fast rendering. We were not able to define \co{\#displayOn:} as the result of an automatic composition. \ab{maybe say more? Santiago?}
+\paragraph{Singularity of \co{\#displayOn:}} Displaying a node uses all the defined caches to have a fast rendering. We were not able to define \co{\#displayOn:} as the result of an automatic composition. The main problem is that this method uses intensively the cache to load and save data during its execution. For this reason, the code related to the cache is very scattered across the method  making the restructuration of it by mean of cache patterns almost unviable. So, this method was restructured using the Generic AOP pattern. 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Discussion}\seclabel{discussion}
 
 \ab{What are the benefits of the approach? Can I unplug cache?}
 
-The injection mechanism may reorder statements in the instrumented method. This is the case of... \ab{add example}.
+The injection mechanism may reorder statements in the instrumented method. This is the case of the reset method (which was presented in the previous section). As was shown, in this case the caches are resetted at the beginning of the method and after that the method \emph{resetElementsToLookup} and \emph{resetMetricCaches} are invocated in contrast with the original method in which the former was invocated at the beginning and the former at the end. Even though the order of calls is changed the behavior of the method is not modified. The consistent behavior was checked in a manual way and by mean of automatic test.
 
 \ab{How many occurrences of statement reordering?}
 
@@ -708,103 +702,103 @@ However, in practice, this has not caused any noticeable problem. The extensive 
 
 % bibliography
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-\bibliographystyle{splncs}
+\bibliographystyle{abbrvnat}
 \bibliography{scg}
 
-\begin{table}
+\begin{table*}
 \begin{centering}
 \begin{tabular}{|>{\centering}p{1.8cm}|c|>{\centering}p{4cm}|>{\centering}p{4cm}|}
 \hline 
 Kind of benchmark & Nodes/Nodes & Time before refactorization (ms) & Time after refactorization (ms)\tabularnewline
 \hline
 \hline 
-Nodes & 100  & 13,6 & 13,9\tabularnewline
+Nodes & 100  & 13 & 13\tabularnewline
 \cline{2-4} 
- & 200 & 23,3 & 21,9\tabularnewline
+ & 200 & 23 & 21\tabularnewline
 \cline{2-4} 
- & 300 & 23,2 & 18,8\tabularnewline
+ & 300 & 23 & 18\tabularnewline
 \cline{2-4} 
- & 400 & 25,2 & 26,5\tabularnewline
+ & 400 & 25 & 26\tabularnewline
 \cline{2-4} 
- & 500 & 30,2 & 32\tabularnewline
+ & 500 & 30 & 32\tabularnewline
 \cline{2-4} 
- & 600 & 35,8 & 38,5\tabularnewline
+ & 600 & 35 & 38\tabularnewline
 \cline{2-4} 
- & 700 & 41,5 & 44,8\tabularnewline
+ & 700 & 41 & 44\tabularnewline
 \cline{2-4} 
- & 800 & 47,3 & 50,9\tabularnewline
+ & 800 & 47 & 50\tabularnewline
 \cline{2-4} 
- & 900 & 53,2 & 57,2\tabularnewline
+ & 900 & 53 & 57\tabularnewline
 \cline{2-4} 
- & 1000 & 59,7 & 63,8\tabularnewline
+ & 1000 & 59 & 63\tabularnewline
 \cline{2-4} 
- & 1600 & 110,7 & 102,7 \tabularnewline
+ & 1600 & 110 & 102 \tabularnewline
 \cline{2-4} 
- & 3200 & 256,1 & 209,9 \tabularnewline
+ & 3200 & 256 & 209 \tabularnewline
 \cline{2-4} 
- & 6400 & 382,5 & 410,9 \tabularnewline
+ & 6400 & 382 & 410 \tabularnewline
 \hline 
-Edges & 10 & 2,6 & 2,5\tabularnewline
+Edges & 10 & 2 & 2\tabularnewline
 \cline{2-4} 
- & 20 & 7,6 & 8\tabularnewline
+ & 20 & 7 & 8\tabularnewline
 \cline{2-4} 
- & 30 & 16,4 & 17,1\tabularnewline
+ & 30 & 16 & 17\tabularnewline
 \cline{2-4} 
- & 40 & 37 & 37,5\tabularnewline
+ & 40 & 37 & 37\tabularnewline
 \cline{2-4} 
- & 50 & 121,8 & 43,8\tabularnewline
+ & 50 & 121 & 43\tabularnewline
 \cline{2-4} 
- & 60 & 63,9 & 83\tabularnewline
+ & 60 & 63 & 83\tabularnewline
 \cline{2-4} 
- & 70 & 83,3 & 150\tabularnewline
+ & 70 & 83 & 150\tabularnewline
 \cline{2-4} 
- & 80 & 110,3 & 109,5 \tabularnewline
+ & 80 & 110 & 109 \tabularnewline
 \cline{2-4} 
- & 90 & 143,3 & 149,2 \tabularnewline
+ & 90 & 143 & 149 \tabularnewline
 \cline{2-4} 
- & 100 & 269,9 & 192,3 \tabularnewline
+ & 100 & 269 & 192 \tabularnewline
 \cline{2-4} 
- & 200 & 1132,3 & 1195,5 \tabularnewline
+ & 200 & 1132 & 1195 \tabularnewline
 \cline{2-4} 
- & 300 & 4122,4 & 3645,4\tabularnewline
+ & 300 & 4122 & 3645\tabularnewline
 \hline 
-Inner nodes & 5 & 159,6 & 159,7\tabularnewline
+Inner nodes & 5 & 159 & 159\tabularnewline
 \cline{2-4} 
- & 10 & 2190,4 & 2212,5\tabularnewline
+ & 10 & 2190 & 2212\tabularnewline
 \cline{2-4} 
- & 15 & 10564,3 & 10666\tabularnewline
+ & 15 & 10564 & 10666\tabularnewline
 \hline 
-Displaying  & 5 & 230,7 & 298,1\tabularnewline
+Displaying  & 5 & 230 & 298\tabularnewline
 \cline{2-4} 
-inner nodes & 10 & 948,7 & 965,4\tabularnewline
+inner nodes & 10 & 948 & 965\tabularnewline
 \cline{2-4} 
- & 15 & 10314,2 & 10053,6 \tabularnewline
+ & 15 & 10314 & 10053 \tabularnewline
 \hline 
-Displaying  & 1 & 10,4 & 9,9\tabularnewline
+Displaying  & 1 & 10 & 9\tabularnewline
 \cline{2-4} 
-inner nodes & 2 & 270,7 & 260,1\tabularnewline
+inner nodes & 2 & 270 & 260\tabularnewline
 \cline{2-4} 
-and edges & 3 & 3827,1 & 3677,5\tabularnewline
+and edges & 3 & 3827 & 3677\tabularnewline
 \cline{2-4} 
- & 4 & 37536,7 & 36337,3 \tabularnewline
+ & 4 & 37536 & 36337 \tabularnewline
 \hline 
-Displaying & 100 & 4,2 & 5,1\tabularnewline
+Displaying & 100 & 4 & 5\tabularnewline
 \cline{2-4} 
-elementAt & 500 & 6,9 & 7,6\tabularnewline
+elementAt & 500 & 6 & 7\tabularnewline
 \cline{2-4} 
- & 1000 & 10,4 & 10,3\tabularnewline
+ & 1000 & 10 & 10\tabularnewline
 \cline{2-4} 
- & 1500 & 13,4 & 13,4\tabularnewline
+ & 1500 & 13 & 13\tabularnewline
 \cline{2-4} 
- & 2000 & 16,2 & 17\tabularnewline
+ & 2000 & 16 & 17\tabularnewline
 \cline{2-4} 
- & 2500 & 19,9 & 20,9\tabularnewline
+ & 2500 & 19 & 20\tabularnewline
 \hline 
-Small nodes & 2000 & 3738,2 & 3685,3\tabularnewline
+Small nodes & 2000 & 3738 & 3685\tabularnewline
 \hline 
-Edges bounds & 500 & 161,2 & 156,8\tabularnewline
+Edges bounds & 500 & 161 & 156\tabularnewline
 \hline 
-Subnodes lookup & 20000 & 4736,1 & 4624,4\tabularnewline
+Subnodes lookup & 20000 & 4736 & 4624\tabularnewline
 \hline
 \end{tabular}
 \par\end{centering}
@@ -813,7 +807,7 @@ Subnodes lookup & 20000 & 4736,1 & 4624,4\tabularnewline
 
 
 
-\end{table}
+\end{table*}
 
 
 \end{document}
