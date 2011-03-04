@@ -110,7 +110,7 @@
 	 \newcommand{\version}{}}
 \newcommand{\rev}[2]{\nb{Reviewer #1}{red}{#2}}
 \newcommand{\ab}[1]{\nb{Alexandre}{blue}{#1}}
-\newcommand{\lr}[1]{\nb{Lukas}{orange}{#1}}
+\newcommand{\sv}[1]{\nb{Santiago}{orange}{#1}}
 
 % graphics: \fig{position}{percentage-width}{filename}{caption}
 \DeclareGraphicsExtensions{.png,.jpg,.pdf,.eps,.gif}
@@ -252,14 +252,15 @@ Nine different caches are found in Mondrian: \emph{cacheShapeBounds},
 \emph{cacheToPoint}, and \emph{cacheBounds}. Each of them has a different
 internal structure according on what is stored. After this initial
 identification, the fragment of codes in which the caches are used
-are grouped together based on the purpose of its use. \chg{As mentioned
-in the previous section, the main general purposes identified are}{A cache is associated with the following actions}: 
+are grouped together based on the purpose of its use. A cache is associated with the following actions: 
 \begin{itemize}
 \item Initialize and reset the cache
 \item Retrieve the cache value
 \item Store data in the cache
 \end{itemize}
 \ab{what is a group and a subgroup?}
+\sv{Los grupos son: \{Initialize, Retrieve, Store\} y los subgrupos son aquellas lineas de codigo que tienen el mismo patron para cada uno de los elementos  de estos grupos. Por emplo, los sugrupos de Initialize son Lazy initialization y cache Initialization.
+La verdad que el concepto de grupo-subgrupo no es algo importante o que sume valor. Creo que simplemente podemos poner que la division en grupos permitio detectar patrones.}
 The task of group the fragments of code of the different caches is
 achieved with the goal of identifying possible strategies for refactoring.
 In this line, some subgroups of similar functionalities are found.
@@ -271,18 +272,15 @@ following subsections.
 
 \subsection{Pattern Description\label{sub:Pattern-Identification}}
 
-This section presents the 5 code pattern\ins{s} we identified 
-Each pattern is described with \chg{the most}{a} relevant typical occurrence,
-the number of occurrences of the pattern and a code example. \del{The purpose
-of the code examples is to illustrate the occurrences of each pattern
-in the proper context.}
+This section presents the 5 code patterns we identified. 
+Each pattern is described with a relevant typical occurrence,
+the number of occurrences of the pattern and a code example.
 
-\paragraph{Reset Cache.} \chg{this pattern represents a situation in which a
-cache is reset}{A cache need to be invalidated when its content has to be actualized. We refer to this action as reset.} The reset structure is \emph{cache:=resetValue} where
+\paragraph{Reset Cache.} A cache need to be invalidated when its content has to be actualized. We refer to this action as reset. The reset structure is \emph{cache:=resetValue} where
 \emph{resetValue} depends on the cache internal structure. Typically,
 the \emph{resetValue} is nil or a new of a kind of Dictionary object.
 Eighteen occurrences of this pattern are found in the Mondrian code. 
-We found that in some occurrences the reset of the caches is performed before the \chg{computations executed in}{the logic of}  the method, and other methods in which the reset must be done \chg{at the end}{after}. 
+We found that in some occurrences the reset of the caches is performed before the logic of the method, and other methods in which the reset must be done after. 
 Next, the method \emph{resetCache} is presented as an example. In
 this method the \emph{Reset Cache} pattern is repeated in four occasions
 to reset the caches \emph{boundsCache}, \emph{absoluteBoundsCache},
@@ -298,7 +296,7 @@ MOGraphElement>>resetCache
 	self resetMetricCaches
 \end{lstlisting}
 
-\paragraph{Lazy initialization.} \ins{In some situations it is not relevant to initialize the cache before it is actually need. } \chg{t}{T}his pattern shows
+\paragraph{Lazy initialization.} In some situations it is not relevant to initialize the cache before it is actually need. This pattern shows
 the situation in which a verification is accomplished before access
 to a cache with the goal of avoid possible exceptions when the cache
 is nil. Typically, the structure of this pattern is: \emph{if (cache==nil)
@@ -345,8 +343,7 @@ MOGraphElement>>isCacheLoaded
 	^cacheForm notNil. 
 \end{lstlisting}
 
-Fig. \ref{fig:Pattern-locations-in} shows \chg{the cache in which methods the patterns
-were found}{the distribution of the caches over the main Mondrian classes}.%
+Fig. \ref{fig:Pattern-locations-in} shows the distribution of the caches over the main Mondrian classes.%
 \begin{figure*}
 \begin{centering}
 \includegraphics[bb=186bp 306bp 497bp 644bp,scale=0.9]{PatternLocation} 
@@ -395,7 +392,7 @@ Total  & 32 & 24 & \multicolumn{1}{c}{}\tabularnewline
 \subsection{Refactoring Strategy}
 
 Once the code patterns are identified, strategies to refactor them
-are established. \ab{What is the goal of the refactoring? We said it a bit in the introduction, but we need to be clear here.} The main constraint to refactoring the code is the
+are established. The goal of the refactorization is the extraction of these patterns from the main code without changing the behavior of the system. The main constraint to refactoring the code is the
 preservation of a good performance of the cache mechanism.
 
 Several alternatives were explored to encapsulate the \emph{Cache
@@ -415,7 +412,7 @@ is not affected. In order to encapsulate the source code related with
 the code patterns the \emph{pragma} mechanism is used. \emph{Pragmas}
 are the method annotation syntax implemented by Pharo.
 
-The refactoring strategy used is: for each method that contain\chg{ed}{s} code
+The refactoring strategy used is: for each method that contains code
 related to the \emph{Cache Concern}, the code related to the concern
 is extracted using a pragma that is defined in the method. The decision
 to define the pragma inside the method is in order to allow a better
@@ -426,7 +423,7 @@ indicates the name of the cache that will be injected and \emph{patternCodeName}
 indicates the pattern code to be generated. For example, the pragma
 \emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates
 that the \emph{Lazy Initialization} pattern will be injected for the cache
-\emph{absoluteBoundsCache} in the method in which the pragma is defined. \ab{it also creates a variable in the class doesn't it?}
+\emph{absoluteBoundsCache} in the method in which the pragma is defined. \ab{it also creates a variable in the class doesn't it?} \sv{No, the only addition into the original method is the pragma}
 
 Once that the cache code is extracted into the pragmas, the code to
 be injected is automatically generated before the execution of the
@@ -441,10 +438,7 @@ MOGraphElement>>absoluteBounds
 	<LazyInitializationPattern: #absoluteBoundsCache> 
 	^ self shape absoluteBoundsFor: self
 \end{lstlisting}
-a new method called \ct{computeMOGraphElementAbsoluteBounds} is created as\del{ is shown below}.\ab{You can remove the code just below. It does not help much}
-\begin{lstlisting} 
-MOGraphElement>>computeMOGraphElementAbsoluteBounds
-\end{lstlisting}
+a new method called \ct{computeMOGraphElementAbsoluteBounds} is created.
 \item The code of the original method is copied into the new method.
 \begin{lstlisting} 
 MOGraphElement>>computeMOGraphElementAbsoluteBounds
@@ -459,7 +453,7 @@ MOGraphElement>>absoluteBounds
 	^ absoluteBoundsCache:=(self computeMOGraphElementabsoluteBounds)
 \end{lstlisting}
 \end{enumerate}
-In this way, the \chg{refactorized}{refactored} cache code is executed with Mondrian.
+In this way, the refactored cache code is executed with Mondrian.
 
 In order to automatically generate the code to be injected, the injector
 code mechanism provides a \emph{CachePattern} interface. In this way,
@@ -498,7 +492,7 @@ in the method. In this case all the resets are done before the method
 call, so the pragmas used are the defined by \emph{BeforeResetCachePattern}.
 Even though the order of calls is changed (in comparison with the
 original method), the method behavior is not modified. The code to
-be generated will \del{be} reset \del{mechanism corresponding to} the cache defined
+be generated will reset the cache defined
 in the pragma. Following, the refactored code is presented:
 
 \begin{lstlisting} 
@@ -560,14 +554,14 @@ boundsCache:= computeMOEdgeBounds.}
 similar to the last one. Given that the structure of the pattern is
 an assignation, the first section of the assignation (\emph{cacheName:=})
 will be generated automatically by the code injection mechanism using
-a pragma defined as $<$CacheIni\chg{c}{t}ializationPattern: cacheName$>$.
+a pragma defined as $<$CacheInitializationPattern: cacheName$>$.
 So, only the value at which is initialized remains in the method.
 In the case of the example presented in Section \ref{sub:Pattern-Identification},
 the refactored code is shown below:
 
 \begin{lstlisting} 
 MOGraphElement>>cacheCanvas: aCanvas 
-	<CacheIni\chg{c}{t}ializationPattern: #cacheForm>  
+	<CacheInitializationPattern: #cacheForm>  
 	(aCanvas form copy: ((self bounds origin + aCanvas origin
 	- (1@1)) extent: (self bounds extent + (2@2)))). 
 \end{lstlisting}
@@ -594,7 +588,7 @@ MOGraphElement>>isCacheLoaded
 \end{lstlisting}
 
 With the use of these patterns the \emph{Cache Concern} is refactorized
-properly in more than 85\% of the methods of the \ct{MOGraphElement} hierarchy. \ab{Does it mean that 85\% of Mondrian methods use a cache?}
+properly in more than 85\% of the methods of the \ct{MOGraphElement} hierarchy that uses one or more caches. \ab{Does it mean that 85\% of Mondrian methods use a cache?} \sv{No, I mean that from all the methods that uses a cache 85\% could be refactored with the pattern structure}
 The main reason because some of the uses of the caches are not encapsulated by means of 
 cache patterns are (1) the code belongs to a cache pattern but the code related with the cache is too mixed 
 with the main concern, or (2) the code does not match with any of the patterns described. For example the method
@@ -656,8 +650,8 @@ and they are finally composed during the injection phase. For example,
 the functionality related to the cache \emph{absoluteBoundsCache}
 is refactored by the patterns \emph{Reset Cache,} \emph{Lazy Initialization}, and \emph{Cache Initialization}.
 
-One of the main priorities during the \chg{refactorization}{refactoring} process was not to affect the performance of the system. 
-For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations observed between the system before and after applying refactorings are not significant. That is because, in general, the code after the injection of the caches is the same that the original code before the Mondrian \chg{refactorization}{refactoring}. The details of the benchmarks results can be found in the appendix. 
+One of the main priorities during the refactoring process was not to affect the performance of the system. 
+For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations observed between the system before and after applying refactorings are not significant. That is because, in general, the code after the injection of the caches is the same that the original code before the Mondrian refactoring. The details of the benchmarks results can be found in the appendix. 
 
 \paragraph{Using cache in the main logic}
 This experience has been the opportunity to rethink on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
