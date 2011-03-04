@@ -260,7 +260,7 @@ are grouped together based on the purpose of its use. A cache is associated with
 \end{itemize}
 \ab{what is a group and a subgroup?}
 \sv{Los grupos son: \{Initialize, Retrieve, Store\} y los subgrupos son aquellas lineas de codigo que tienen el mismo patron para cada uno de los elementos  de estos grupos. Por emplo, los sugrupos de Initialize son Lazy initialization y cache Initialization.
-La verdad que el concepto de grupo-subgrupo no es algo importante o que sume valor. Creo que simplemente podemos poner que la division en grupos permitio detectar patrones.}
+La verdad que el concepto de grupo-subgrupo no es algo importante o que sume valor. Creo que simplemente podemos poner que la division en grupos permitio detectar patrones.}\ab{I see. But why these groups and subgroups are not apparent in Figure 3? Shouldn't we have a class Initialization with two subclasses, LazyInitialization and CacheInitialization?}
 The task of group the fragments of code of the different caches is
 achieved with the goal of identifying possible strategies for refactoring.
 In this line, some subgroups of similar functionalities are found.
@@ -449,8 +449,10 @@ generated according to the pattern defined in the pragma. This generated
 method contains a call to the new method of the Step 1.
 \begin{lstlisting} 
 MOGraphElement>>absoluteBounds
-	absoluteBoundsCache ifNotNil: [ ^ absoluteBoundsCache].
-	^ absoluteBoundsCache:=(self computeMOGraphElementabsoluteBounds)
+	absoluteBoundsCache 
+		ifNotNil: [ ^ absoluteBoundsCache].
+	^ absoluteBoundsCache:=
+		(self computeMOGraphElementabsoluteBounds)
 \end{lstlisting}
 \end{enumerate}
 In this way, the refactored cache code is executed with Mondrian.
@@ -469,7 +471,7 @@ added to the system. This class hierarchy is shown in Fig. \ref{fig:Pattern-hier
 \includegraphics[bb=21bp 541bp 561bp 789bp,scale=0.7]{PatternInheritance}
 \par\end{centering}
 
-\caption{Pattern hierarchy. \ab{Maybe move this figure to the discussion section or at the end of the section} \label{fig:Pattern-hierarchy.}}
+\caption{Pattern hierarchy.\label{fig:Pattern-hierarchy.}}
 
 \end{figure*}
 
