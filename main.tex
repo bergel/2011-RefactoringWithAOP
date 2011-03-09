@@ -192,23 +192,55 @@ justificar el xq se quiere refactorizar los cache
 \end{itemize}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-\section{Modularly defining caches in Mondrian}\seclabel{problem}
+\section{Making Mondrian Evolve}\seclabel{problem}
 
-\paragraph{Context.} Mondrian\footnote{\url{http://www.moosetechnology.org/tools/mondrian}}~\cite{Meye06a} is an open and agile visualization library. 
-Mondrian uses a graph, made of possibly nested nodes and edges, to describe a visualization. Mondrian is a crucial component which is used in more than a dozen of independent projects. To meet clients performance requirements, Mondrian's authors are paying a great attention to provide fast and scalable rendering. To that purpose, Mondrian contains a number of cache mechanisms to avoid redundant code executions. These caches were introduced gradually, according to emerging requirements.
+This section describes a maintenance problem we have faced when development the Mondrian visualization engine.
 
-Mondrian is now on the verge to become a visualization engine framework versus a library as it is currently. Mondrian is now used in situations that were not originally planned. For example, Mondrian has been used to visualize the behavior of animated robots, whereas Mondrian has been originally designed to visualize software source code~\cite{Lanz03d}. The caches that are intensively used when visualizing software are not useful and may even be a source of slowdown and complexity when visualizing animated robots. 
+%:=========
+\subsection{Turning Mondrian into a framework}
+
+Mondrian\footnote{\url{http://www.moosetechnology.org/tools/mondrian}}~\cite{Meye06a} is an agile visualization library. A domain specific language is provided to easily define interactive visualizations.
+Visualizations are structured along a graph structured, made of possibly nested nodes and edges. Mondrian is a crucial component which is used in more than a dozen of independent projects. To meet clients performance requirements, Mondrian authors are paying a great attention to provide fast and scalable rendering. To that purpose, Mondrian contains a number of cache to avoid redundant code executions.
+
+Mondrian is now on the verge to become a visualization engine framework versus a library as it is currently. Mondrian is now used in situations that were not originally planned. For example, Mondrian has been used to visualize the real-time behavior of animated robots\footnote{\url{http://www.squeaksource.com/Calder.html}}, 3D visualizations\footnote{\url{http://www.squeaksource.com/Klotz.html}}, whereas Mondrian has been originally designed to visualize software source code using plain 2D drawing~\cite{Lanz03d}. The caches that are intensively used when visualizing software are not useful and may even be a source of slowdown and complexity when visualizing animated robots. 
 
 The future Mondrian framework must offer the possibility of selectively using and combining caches.
 
-\paragraph{Problem.}
+%:=========
+\subsection{Memoization}
 
+Memoization is an optimization technique used to speed up an application by making calls avoid repeating the similar previous computation\footnote{\url{http://www.tfeb.org/lisp/hax.html\#MEMOIZE}}. Consider the method \ct{absoluteBounds} that any Mondrian element can answer to. This method determines the circumscribed rectangle of the graphical element:
+
+\begin{lstlisting} 
+MOGraphElement>>absoluteBounds
+	<b>absoluteBoundsCache 
+		ifNotNil: [ ^ absoluteBoundsCache ].</b>
+	^ <b>absoluteBoundsCache := 
+		</b>self shape absoluteBoundsFor: self
+\end{lstlisting}
+
+The method \ct{absoluteBoundsFor:} realizes heavy computation to determine what the smallest rectangle that contains all the nested elements. Since this method does not perform any global side effect, the class \ct{MOGraphElement} defines an instance variable called \ct{absoluteBoundsCache} which is initialized at the first invocation of \ct{absoluteBounds}. Subsequent invocation will therefore use the result previously computed. 
+
+Obviously, the variable \ct{absoluteBoundsCache} needs to be set to \ct{nil} when the structure of the element is modified (\eg adding a new nested node, drag and dropping).
+
+%Implementing a memoization is not always that simple. 
+
+%:=========
+\subsection{Problem.}
+
+Mondrian intensively use memoization for most of it computation. A user-performed interaction that leads to an update of the visualization invalidate the visualization. These memoization have were gradually introduced over the long development of Mondrian (which started in 2006). Each unpredicted usage leaded to a performance problem was has been solved using a new memoization. There is about 32 memoizations in the current version of Mondrian.
+
+These caches have been shaped along the common usage of Mondrian. Visualizations produced in Mondrian are \emph{all} static, employ colored geometrical objects and interactions are offered by simply on these objects.
+
+Extending the range of applications for Mondrian invalidate some of the caches. For example \ct{absoluteBoundsCache} has no meaning in the three-dimensional version of Mondrian since the circumscribed rectangle is meaningful only with two dimentions.
+
+\ab{here}
 Modularizing caches cannot be realizing without loosing performances.
 Currently, the caches are implemented by means of dedicated instance variables
- defined in the MOGraphElement class. That is to say, for each
+ defined in the \ct{MOGraphElement} class. That is to say, for each
 new cache that is added, a variable must be defined. The basic functionalities
 of the caches are store/get a value and reset. The goal of
-the refactorization is the extraction of the \emph{Cache Concern}
+the refactoring is the extraction of the \emph{Cache Concern}
 by means of the creation of a specific class to delegate the behavior
 of the caches, it must have these functionalities. For example, could
 be used a strategy which uses a class containing a collection of caches
@@ -234,6 +266,16 @@ being the delay proportional to the number of elements.
 \caption{Cache behavior delegation.\label{fig:Cache-behaviour-delegation.}}
 
 \end{figure*}
+
+
+%:=========
+\subsection{Requirement for refactoring}
+
+\begin{itemize}
+\item to understand where the cache are defined and used
+\item no cost must be incurred, else it defeats the whole purpose of the work
+\item Readability must not be reduced
+\end{itemize}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Refactoring}\seclabel{refactoring}
