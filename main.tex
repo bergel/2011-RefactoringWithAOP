@@ -235,15 +235,15 @@ These caches have been shaped along the common usage of Mondrian. Visualizations
 Extending the range of applications for Mondrian invalidate some of the caches. For example \ct{absoluteBoundsCache} has no meaning in the three-dimensional version of Mondrian since the circumscribed rectangle is meaningful only with two dimentions.
 
 \ab{here}
-Modularizing caches cannot be realizing without loosing performances.
+In order to solve these problems a refactorization of the caches is needed to modularize them. However, modularizing caches cannot be realizing without loosing performances.
 Currently, the caches are implemented by means of dedicated instance variables
  defined in the \ct{MOGraphElement} class. That is to say, for each
 new cache that is added, a variable must be defined. The basic functionalities
 of the caches are store/get a value and reset. The goal of
 the refactoring is the extraction of the \emph{Cache Concern}
 by means of the creation of a specific class to delegate the behavior
-of the caches, it must have these functionalities. For example, could
-be used a strategy which uses a class containing a collection of caches
+of the caches. To accomplish this task could
+be used, for example, a strategy which uses a class containing a collection of caches
 and each cache can contain different types of items (as is shown in
 Fig. \ref{fig:Cache-behaviour-delegation.}). In this case, all the
 cache variables and the fragments of code of the methods in which
@@ -273,7 +273,7 @@ being the delay proportional to the number of elements.
 
 \begin{itemize}
 \item to understand where the cache are defined and used
-\item no cost must be incurred, else it defeats the whole purpose of the work
+\item no cost of performance must be incurred, else it defeats the whole purpose of the work
 \item Readability must not be reduced
 \end{itemize}
 
@@ -294,7 +294,7 @@ Nine different caches are found in Mondrian: \emph{cacheShapeBounds},
 \emph{cacheToPoint}, and \emph{cacheBounds}. Each of them has a different
 internal structure according on what is stored. After this initial
 identification, the fragment of codes in which the caches are used
-are grouped together based on the purpose of its use. A cache is associated with the following actions: 
+are grouped together based on the purpose of its use. Each group is associated with different activities: 
 \begin{itemize}
 \item Initialize and reset the cache
 \item Retrieve the cache value
@@ -302,13 +302,12 @@ are grouped together based on the purpose of its use. A cache is associated with
 \end{itemize}
 \ab{what is a group and a subgroup?}
 \sv{Los grupos son: \{Initialize, Retrieve, Store\} y los subgrupos son aquellas lineas de codigo que tienen el mismo patron para cada uno de los elementos  de estos grupos. Por emplo, los sugrupos de Initialize son Lazy initialization y cache Initialization.
-La verdad que el concepto de grupo-subgrupo no es algo importante o que sume valor. Creo que simplemente podemos poner que la division en grupos permitio detectar patrones.}\ab{I see. But why these groups and subgroups are not apparent in Figure 3? Shouldn't we have a class Initialization with two subclasses, LazyInitialization and CacheInitialization?}
+La verdad que el concepto de grupo-subgrupo no es algo importante o que sume valor. Creo que simplemente podemos poner que la division en grupos permitio detectar patrones.}\ab{I see. But why these groups and subgroups are not apparent in Figure 3? Shouldn't we have a class Initialization with two subclasses, LazyInitialization and CacheInitialization?} 
+\sv{Cambie lo de grupo y subgrupo porque era confuso} 
 The task of group the fragments of code of the different caches is
 achieved with the goal of identifying possible strategies for refactoring.
-In this line, some subgroups of similar functionalities are found.
-These subgroups allows the identification of code patterns that are
-repeated in the use of the caches. Once the patterns are identified,
-a refactoring strategy is applied. These steps are described in the
+These groups allows the identification of code patterns that are
+repeated in the use of the caches. For each patter found a refactoring strategy is defined. These code patterns are described in the
 following subsections.
 
 
@@ -351,7 +350,7 @@ MOEdge>>bounds
 	^ boundsCache ifNil:[boundsCache:= self shape computeBoundsFor: self ]. 
 \end{lstlisting}
 
-\paragraph{Cache Initialization.} this pattern represents a situation in
+\paragraph{Cache Initialization.} This pattern represents a situation in
 which a value is assigned to a cache. The structure of the pattern
 is only an assignation: cache:=\emph{aValue}. This pattern is found
 in three occasions. Next, the method \emph{cacheCanvas} is presented
@@ -363,7 +362,7 @@ MOGraphElement>>cacheCanvas: aCanvas
 	- (1@1)) extent: (self bounds extent + (2@2))). 
 \end{lstlisting}
 
-\paragraph{Return Cache.} this pattern shows the situation in which a cache
+\paragraph{Return Cache.} This pattern shows the situation in which a cache
 is accessed. The structure of the pattern is the return of the cache:
 \emph{return cache}. This pattern is found in four occasions. Next,
 the method \emph{shapeBounds} is presented as an example in which
@@ -374,7 +373,7 @@ MOGraphElement>>shapeBounds
 	^ cacheShapeBounds
 \end{lstlisting}
 
-\paragraph{Cache Loaded.} this pattern checks whether one cache or more
+\paragraph{Cache Loaded.} This pattern checks whether one cache or more
 are initialized or conversely, if they are not nil. So, the structure of the
 pattern for a single cache is \emph{cache != nil}. This pattern is
 found in two occasions. Next the method \emph{isCacheLoaded} is presented
@@ -695,7 +694,16 @@ the functionality related to the cache \emph{absoluteBoundsCache}
 is refactored by the patterns \emph{Reset Cache,} \emph{Lazy Initialization}, and \emph{Cache Initialization}.
 
 One of the main priorities during the refactoring process was not to affect the performance of the system. 
-For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations observed between the system before and after applying refactorings are not significant. That is because, in general, the code after the injection of the caches is the same that the original code before the Mondrian refactoring. The details of the benchmarks results can be found in the appendix. 
+For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations observed between the system before and after applying refactorings are not significant. That is because, in general, the code after the injection of the caches is the same that the original code before the Mondrian refactoring. There were only minor changes such as the reorder of statements in some methods (without changes in the behavior) and the deletion of methods with repeated code. The details of the benchmarks results are shown in Figure \ref{fig:Benchmark} in which the time execution to the nodes and edges visualization were calculated. The results of both benchmarks were average over a total of 10 samples. As can be seen, as was expected, there are not remarkable variations during these displaying.
+
+\begin{figure*}
+\begin{centering}
+\includegraphics[bb=55bp 65bp 280bp 630bp,clip,angle=-90,scale=0.80]{benchmarks}
+\par\end{centering}
+
+\caption{Benchmark of perfomance.\label{fig:Benchmark}}
+
+\end{figure*}
 
 \paragraph{Using cache in the main logic}
 This experience has been the opportunity to rethink on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
@@ -729,6 +737,17 @@ The injection mechanism may reorder statements in the instrumented method. This 
 However, in practice, this has not caused any noticeable problem. The extensive test set of Mondrian remained green after the instrumentation.
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Related Work}\seclabel{relatedWork}
+Most of the work in AOP has been focused in Java and AspectJ. An approach called AspectS has been proposed for Smalltalk-Squeak~\cite{Hirschfeld2002}. This is a general purpose AOP language with dynamic weaving. \sv{No estoy seguro de como justificar que no utilizamos AspectS para los caches. ¿Si funciona en squeak funciona en pharo? Una posibilidad es el overhead que implica la definicion de los pointcuts y aspectos y que no se garantizaba la misma performance en la ejecucion} 
+Several approaches have been presented in order to refactor and migrate OO systems to AO ones. Some of these approaches use a low level of granularity focusing in the refactorization of simple languages elements such as methods or fields~\cite{Ceccato2008,Tonella2005,Binkley2005,Deursen2005,Hannemann2003}. 
+On the other hand, other approaches are focused in a high level of granularity. This kind of approach tries to encapsulate into an aspect an architectural pattern that represents a CCC. That is, these approaches are focused on the refactorization of a specific type of concern. Our work is under this category. 
+Others works that deals with the refactorization in a high level of granularity are discussed next. Da Silva et al.~\cite{Silva2009} present an approach of metaphor-driven heuristics and associated refactorings. The refactorization of the code proposed is applicable on two concerns metaphors. A heuristic represents a pattern of code that is repeated for an specific concern and it is encapsulated into an aspect by means of a set of fixed refactorings.
+Van der Rijst et al..~\cite{Rijst2008, Marin2009} propose a migration strategy based on crosscutting concern sorts. With this approach the CCCs are described by means of concern sorts. In order to refactor the code, each specific CCC sort indicates what refactorings should be applied to encapsulate it into an aspect. 
+Hannemman et al.~\cite{Hannemann2005} present a role-based refactoring approach. Toward this goal the CCCs are described using abstract roles. In this case the refactorings that are going to be used to encapsulate a role are chosen by the developer in each case.
+Finally, AOP has been used for some mechanisms of cache in the past. Bouchenak et al.~\cite{Bouchenak2006} present a dynamic web caching content approach based on AOP. In order to achieve this goal, a set of weaving rules are specified using AspectJ as aspect-oriented language. In this same line, Loughran and Rashid~\cite{Loughran2004} propose a web cache to evaluate an aspect-oriented approach based on XML annotations. 
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Conclusion}\seclabel{conclusion}
 
 
@@ -742,6 +761,17 @@ However, in practice, this has not caused any noticeable problem. The extensive 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \bibliographystyle{abbrvnat}
 \bibliography{scg}
+
+\end{document}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 \begin{table*}
 \begin{centering}
@@ -846,18 +876,6 @@ Subnodes lookup & 20000 & 4736 & 4624\tabularnewline
 
 
 \end{table*}
-
-
-\end{document}
-
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 \begin{lstlisting} 
 MOGraphElement>>cacheCanvas: aCanvas 
