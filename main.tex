@@ -292,13 +292,11 @@ As exemplified with the \ct{absoluteBounds} method given above, the caches are i
 
 %To accomplish this task could be used, for example, a strategy which uses a class containing a collection of caches and each cache can contain different types of items (as is shown in Fig. \ref{fig:Cache-behaviour-delegation.}). 
 \figref{Cache-behaviour-delegation} illustrates this situation where a graph element has one instance of the \ct{Cache} class, itself referencing to many instances of \ct{CacheableItem}, one for each cache.
-%In this case, all the cache variables and the fragments of code of the methods in which they were used were encapsulated using the \emph{Cache} class and creating a suitable \emph{CacheableItem}. 
+%In this case, all the cache variables and the fragments of code of the methods in which they were used were encapsulated using the \emph{Cache} class and creating a suitable \emph{CacheableItem}. So, with this solution, only remain a reference in \emph{MOGraphElement} class to the \emph{Cache} class that contains all the caches\ab{I do not understand. Did I just say that?} \sv{trato de justificar que se gana con esta solucion. Lo bueno era que solo quedaba una referencia a la clase contenedora de los caches en MOGraphElement}. 
 
-In \emph{MOGraphElement} hierarchy only remain a reference to the \emph{Cache} class that contains all the caches\ab{I do not understand. Did I just say that?}. 
-
-\paragraph{Significant overhead.} This \del{kind of} modularization \ins{solely based on delegating message} \chg{looses performances}{has a sever overhead at execution time}
-because \ugh{the access to the cache variable is not direct}. This causes
-a delay\ab{delay?} when attempting to access the values that keep the caches.
+\paragraph{Significant overhead.} This modularization solely based on delegating message has a sever overhead at execution time
+because \ugh{the access to the cache variable is not direct}\sv{No entiendo que es lo que deberia poner en lugar de esto}. This causes
+a delay\ab{delay?} \sv{me refiero a que tardaba demasiado tiempo en acceder a la cache por la cantidad de indirecciones}when attempting to access the values that keep the caches.
 So, the separation of this concern is not a trivial problem. Specifically,
 when this solution the caches mechanism was 3 to 10 times slower,
 being the delay proportional to the number of elements.
@@ -335,54 +333,47 @@ and its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}). These clas
 
 %========
 \subsection{Identifying caches}
-\figref{PatternLocation}
 The first step of the refactoring is the identification of the caches.
 This initial identification of the caches is done with the information
 provided by the developers of Mondrian and it lies in to know the
-variables related to the caches and the places where they are used.
+variables related to the caches and the places where they are used. \ab{say how you identified the caches. Using variable accessors, sender of accessor and mutators I imagine?}The caches are mostly identified by browsing the methods in which the caches variables are referenced and accessed.
 Nine different caches are found in Mondrian: \emph{cacheShapeBounds},
 \emph{cacheForm}, \emph{boundsCache}, \emph{absoluteBoundsCache},
 \emph{elementsToDisplayCache}, \emph{lookupNodeCache}, \emph{cacheFromPoint},
 \emph{cacheToPoint}, and \emph{cacheBounds}. Each of them has a different
 internal structure according to what is stored: \emph{boundsCache} will hold an instance of the class \ct{Rectangle} and \emph{cacheForm} an instance of a bitmap \ct{Forms}, for example.
 
-\ab{say how you identified the caches. Using variable accessors, sender of accessor and mutators I imagine?}
 
-\figref{PatternLocation} shows the distribution of the caches over the main Mondrian classes. \ab{Describe the figure better}
+
+\figref{PatternLocation} shows the distribution of the caches over the main Mondrian classes. In this figure, the methods in which the caches are used are shown. Also, \figref{PatternLocation} shows in which class each cache is defined. As can be seen, the caches are used and defined across the whole class hierarchy. \sv{No estoy seguro de poner esta figura aca. Esta mostrando los patrones y aun no han sido explicados}
 
 After this initial
 identification, the fragment of codes \ugh{in which} the caches are used
-are grouped together based on the \ugh{purpose of its use}\ab{not really clear, what is a purpose of its use? give an example}. Each group is associated with different activities:\ab{add one sentence for each of the item below} 
+are grouped together based on the \ugh{purpose of its use} (eg. saving information, obtaining the data stored, etc.). Each group is associated with different activities:
 \begin{itemize}
-\item Initialize and reset the cache
-\item Retrieve the cache value
-\item Store data in the cache
+\item Initialize and reset the cache: the fragments of code in this group initialize or reset a cache variable putting them in nil or creating an instance of an object.
+\item Retrieve the cache value: this group obtain the information that is saved in a cache.
+\item Store data in the cache: the code fragments grouped here save information into a cache varible such as an instance of a class.
 \end{itemize}
-\ab{what is a group and a subgroup?}
-\sv{Los grupos son: \{Initialize, Retrieve, Store\} y los subgrupos son aquellas lineas de codigo que tienen el mismo patron para cada uno de los elementos  de estos grupos. Por emplo, los sugrupos de Initialize son Lazy initialization y cache Initialization.
-La verdad que el concepto de grupo-subgrupo no es algo importante o que sume valor. Creo que simplemente podemos poner que la division en grupos permitio detectar patrones.}\ab{I see. But why these groups and subgroups are not apparent in Figure 3? Shouldn't we have a class Initialization with two subclasses, LazyInitialization and CacheInitialization?} 
-\sv{Cambie lo de grupo y subgrupo porque era confuso}\ab{remove these comments if they are not necessary} 
-The task of group\ab{I am still confused with group here} the fragments of code of the different caches is
+The task of group\ab{I am still confused with group here} \sv{Uso los grupos como una forma de explicar como llegamos a los patrones. Es decir, primero dividi todos los usos de las caches en los tres grupos que explique arriba. Despues encontre los patrones dentro de esos grupos.} the fragments of code of the different caches is
 achieved with the goal of identifying possible strategies for refactoring.
 These groups allows the identification of code patterns that are
-repeated in the use of the caches. For each patter\ins{n} found a refactoring strategy is defined\ab{Do you want to say that a refactoring is associated to each pattern? If yes, then just say it :-)}. These code patterns are described in the
-following subsections.
+repeated in the use of the caches. For each pattern found a refactoring strategy is associated. These code patterns are described in the following subsections.
 
 %========
 \subsection{Pattern Description\label{sub:Pattern-Identification}}
 
-\ins{We identified 5 code patterns based on Mondrian source code and are described below.}
-\del{This section presents the 5 code patterns we identified.} 
+We identified 5 code patterns based on Mondrian source code and are described below.
 Each pattern is described with a relevant typical occurrence,
-the number of occurrences \chg{of the pattern}{we found in Mondrian} and \chg{a code example}{an illustration}.
+the number of occurrences we found in Mondrian and an illustration.
 
-\paragraph{Reset Cache.} A cache \chg{need}{has} to be invalidated when its content has to be actualized. We refer to this action as reset. The reset structure is \emph{cache:=resetValue} where
+\paragraph{Reset Cache.} A cache has to be invalidated when its content has to be actualized. We refer to this action as reset. The reset structure is \emph{cache:=resetValue} where
 \emph{resetValue} depends on the cache internal structure. Typically,
-the \emph{resetValue} \chg{is nil or a new of a kind of Dictionary object}{depends on the type of the stored value. It could be \ct{nil}, an empty dictionary, or a particular value (\eg \ct{0@0})}.
-Eighteen occurrences of this pattern are found in \del{the} Mondrian\del{ code}. 
-We found that in some occurrences the reset of the caches is performed before the logic of the method, and other methods in which the reset must be done after\ab{gives an example. This is important}. 
+the \emph{resetValue} depends on the type of the stored value. It could be \ct{nil}, an empty dictionary, or a particular value (\eg \ct{0@0}).
+Eighteen occurrences of this pattern are found in Mondrian. 
+We found that in some occurrences the reset of the caches is performed before the logic of the method, and other methods in which the reset must be done after. For example, the method \ct{MOGraphElement>>shapeBoundsAt: put:} resets the caches \emph{absoluteBoundsCache} and \emph{boundsCache} before modifying the cache cacheShapeBounds. In contrast, the method \ct{MONode>>translateBy: bounded:} resets the caches \emph{boundsCache} and \emph{absoluteBoundsCache} after executing most of the sentences of the method. 
 
-\chg{Next, the method \emph{resetCache} is presented as an example.}{Consider the method \ct{MOGraphElement>>resetCache}. This method is called whenever the user drag and drop a graphical element.} In
+Consider the method \ct{MOGraphElement>>resetCache}. This method is called whenever the user drag and drop a graphical element. In
 this method the \emph{Reset Cache} pattern is repeated in four occasions
 to reset the caches \emph{boundsCache}, \emph{absoluteBoundsCache},
 \emph{cacheShapeBounds}, and \emph{elementsToDisplayCache}. In this case, the reset of the caches can be done before or after the execution of the methods \emph{resetElementsToLookup} and  \emph{resetMetricCaches}.
@@ -399,26 +390,19 @@ MOGraphElement>>resetCache
 
 
 
-\paragraph{Lazy initialization.} In some situations it is not relevant to initialize the cache before it is actually need. \ins{This happens when a graphical element is not outside the window. These caches are relevant only when the user actually see the element by scrolling the visualization.} This pattern shows
-the situation in which a verification is accomplished before access
-to a cache with the goal of avoid possible exceptions when the cache
-is nil\ab{I do not understand this sentence. I think it can be removed}. Typically, the structure of this pattern is: \emph{if (cache==nil)
-cache:=newValue. return cache} \ab{Use Smalltalk code}. \chg{Five occurrences of this pattern are
-found in the Mondrian code}{Mondrian contains five occurrences of a lazy cache initialization}. \chg{Next, the method \emph{bounds} is presented
-as an example in which boundsCache is accessed.}{Consider the \ct{bounds} method:}
+\paragraph{Lazy initialization.} In some situations it is not relevant to initialize the cache before it is actually needed. This happens when a graphical element is not outside the window. These caches are relevant only when the user actually see the element by scrolling the visualization. Typically, the structure of this pattern is: \emph{\^{} cache ifNil:[cache:=newValue]}. Mondrian contains five occurrences of a lazy cache initialization. Consider the \ct{bounds} method:
 
 \begin{lstlisting} 
 MOEdge>>bounds  
 	^ boundsCache ifNil:[boundsCache:= self shape computeBoundsFor: self ]. 
 \end{lstlisting}
 
-\ins{The circumscribed rectangle is returned by \ct{computeBoundsFor:} and is performed only when a edge is actually visible (\ct{bounds} is used in \ct{drawOn:} , the rendering method.}
+The circumscribed rectangle is returned by \ct{computeBoundsFor:} and is performed only when a edge is actually visible (\ct{bounds} is used in \ct{drawOn:}, the rendering method.
 
 \paragraph{Cache Initialization.} This pattern represents a situation in
 which a value is assigned to a cache. The structure of the pattern
 is only an assignation: \emph{cache := aValue}. This pattern is found
-in three occasions. \chg{Next, the method \emph{cacheCanvas} is presented
-as an example in which a value is assigned to cacheForm.}{Consider the method \ct{cacheCanvas:}}
+in three occasions. Consider the method \ct{cacheCanvas:}
 
 \begin{lstlisting} 
 MOGraphElement>>cacheCanvas: aCanvas 
@@ -427,7 +411,7 @@ MOGraphElement>>cacheCanvas: aCanvas
 				extent: (self bounds extent + (2@2))). 
 \end{lstlisting}
 
-\ins{The method \ct{cacheCanvas:} is invoked when...}\ab{please complete}
+The method \ct{cacheCanvas:} is invoked when...\ab{please complete}\sv{Acabo de notar que este metodo solo es usado en los test. ¿Pongo algo relacionado con eso?}
 
 \paragraph{Return Cache.} This pattern shows the situation in which a cache
 is accessed. The structure of the pattern is the return of the cache:
@@ -463,7 +447,7 @@ MOGraphElement>>isCacheLoaded
 %\end{figure*}
 
 
-Additionally, Table \ref{tab:Cache-Concern-scattering} \ab{something wrong with the ref?} presents a
+Additionally, Table \ref{tab:Cache-Concern-scattering} \ab{something wrong with the ref?}\sv{Why?} presents a
 summary of the occurrences of each pattern in the MOGraphElement hierarchy,
 the methods involved in each pattern, and the caches related with
 a pattern.
