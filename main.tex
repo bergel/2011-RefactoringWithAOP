@@ -295,8 +295,8 @@ As exemplified with the \ct{absoluteBounds} method given above, the caches are i
 %In this case, all the cache variables and the fragments of code of the methods in which they were used were encapsulated using the \emph{Cache} class and creating a suitable \emph{CacheableItem}. So, with this solution, only remain a reference in \emph{MOGraphElement} class to the \emph{Cache} class that contains all the caches\ab{I do not understand. Did I just say that?} \sv{trato de justificar que se gana con esta solucion. Lo bueno era que solo quedaba una referencia a la clase contenedora de los caches en MOGraphElement}. 
 
 \paragraph{Significant overhead.} This modularization solely based on delegating message has a sever overhead at execution time
-because \chg{the access to the cache variable is not direct}{of additional indirection}. This causes
-a \chg{delay when attempting to access the values that keep the caches}{a significant overhead}.
+because of additional indirection. This causes
+a significant overhead.
 So, the separation of this concern is not a trivial problem. Specifically,
 when this solution the caches mechanism was 3 to 10 times slower,
 being the delay proportional to the number of elements.
@@ -336,7 +336,7 @@ and its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}). These clas
 The first step of the refactoring is the identification of the caches.
 This initial identification of the caches is done with the information
 provided by the developers of Mondrian and it lies in to know the
-variables related to the caches and the places where they are used. \ab{say how you identified the caches. Using variable accessors, sender of accessor and mutators I imagine?}The caches are mostly identified by browsing the methods in which the caches variables are referenced and accessed.
+variables related to the caches and the places where they are used. The caches are mostly identified by browsing the methods in which the caches variables are referenced and accessed.
 Nine different caches are found in Mondrian: \emph{cacheShapeBounds},
 \emph{cacheForm}, \emph{boundsCache}, \emph{absoluteBoundsCache},
 \emph{elementsToDisplayCache}, \emph{lookupNodeCache}, \emph{cacheFromPoint},
@@ -344,24 +344,22 @@ Nine different caches are found in Mondrian: \emph{cacheShapeBounds},
 internal structure according to what is stored: \emph{boundsCache} will hold an instance of the class \ct{Rectangle} and \emph{cacheForm} an instance of a bitmap \ct{Forms}, for example.
 
 
-
-\figref{PatternLocation} shows the distribution of the caches over the main Mondrian classes. In this figure, the methods in which the caches are used are shown. Also, \figref{PatternLocation} shows in which class each cache is defined. As can be seen, the caches are used and defined across the whole class hierarchy. \sv{No estoy seguro de poner esta figura aca. Esta mostrando los patrones y aun no han sido explicados}\ab{Tiene razon creo. Pone la figura en Section 3.2}
-
 After this initial
-identification, the fragment of codes \ugh{in which} the caches are used
-are grouped together based on the \ugh{purpose of its use} (eg. saving information, obtaining the data stored, etc.). Each group is associated with different activities:
+identification, the fragment of codes (in which the caches are used)
+are grouped together based on the purpose of its use (eg. saving information, obtaining the data stored, etc.). Each group is associated with different activities:
 \begin{itemize}
 \item Initialize and reset the cache: the fragments of code in this group initialize or reset a cache variable putting them in nil or creating an instance of an object.
 \item Retrieve the cache value: this group obtain the information that is saved in a cache.
 \item Store data in the cache: the code fragments grouped here save information into a cache varible such as an instance of a class.
 \end{itemize}
-\ab{I am wondering whether we need this paragraph at all. I think we can safely remove it. It basically says what comes next.} The task of group\ab{I am still confused with group here} \sv{Uso los grupos como una forma de explicar como llegamos a los patrones. Es decir, primero dividi todos los usos de las caches en los tres grupos que explique arriba. Despues encontre los patrones dentro de esos grupos.} the fragments of code of the different caches is
+The task of group the fragments of code of the different caches is
 achieved with the goal of identifying possible strategies for refactoring.
 These groups allows the identification of code patterns that are
 repeated in the use of the caches. For each pattern found a refactoring strategy is associated. These code patterns are described in the following subsections.
 
 %========
 \subsection{Pattern Description\label{sub:Pattern-Identification}}
+
 
 We identified 5 code patterns based on Mondrian source code and are described below.
 Each pattern is described with a relevant typical occurrence,
@@ -411,7 +409,7 @@ MOGraphElement>>cacheCanvas: aCanvas
 				extent: (self bounds extent + (2@2))). 
 \end{lstlisting}
 
-The method \ct{cacheCanvas:} is invoked when...\ab{please complete}\sv{Acabo de notar que este metodo solo es usado en los test. ¿Pongo algo relacionado con eso?}\ab{Si, prueba}
+The method \ct{cacheCanvas:} only is invoked during testing in order to verify some characteristics of the caches such as their effectiveness.
 
 \paragraph{Return Cache.} This pattern shows the situation in which a cache
 is accessed. The structure of the pattern is the return of the cache:
@@ -437,18 +435,10 @@ MOGraphElement>>isCacheLoaded
 
 
 
-\largefig{}{0.6}{PatternLocation}{Pattern locations in the MOGraphElement hierarchy}
-
-%\begin{figure*}
-%\begin{centering}
-%\includegraphics[bb=186bp 306bp 497bp 644bp,scale=0.9]{PatternLocation.pdf} 
-%\par\end{centering}
-%\caption{Pattern locations in MOGraphElement hierarchy.\label{fig:Pattern-locations-in}}
-%\end{figure*}
 
 
-Additionally, Table \ref{tab:Cache-Concern-scattering} \chg{presents a
-summary of}{gives} the occurrences of each pattern in the MOGraphElement hierarchy,
+
+Additionally, Table \ref{tab:Cache-Concern-scattering} gives the occurrences of each pattern in the MOGraphElement hierarchy,
 the methods involved in each pattern, and the caches related with
 a pattern.
 
@@ -480,25 +470,29 @@ Total  & 32 & 24 & \multicolumn{1}{c}{}\tabularnewline
 
 \end{table*}
 
-\ab{@@HERE}
+\largefig{}{0.6}{PatternLocation}{Pattern locations in the MOGraphElement hierarchy}
+
+%\begin{figure*}
+%\begin{centering}
+%\includegraphics[bb=186bp 306bp 497bp 644bp,scale=0.9]{PatternLocation.pdf} 
+%\par\end{centering}
+%\caption{Pattern locations in MOGraphElement hierarchy.\label{fig:Pattern-locations-in}}
+%\end{figure*}
+
+\figref{PatternLocation} shows the distribution of the caches over the main Mondrian classes. In this figure, the methods in which the caches are used are shown. Also, \figref{PatternLocation} shows in which class each cache is defined. As can be seen, the caches are used and defined across the whole class hierarchy.
+
 %========
 \subsection{Refactoring Strategy}
 
 \ab{I was wondering. Why not to rename this section as ``Memoization as an aspect''? After some discussion with Eric, we are still doing aop, even without AspectJ or an explicit aspect language. We could then use "weaving" instead of "injection"}
 
 Once the code patterns are identified, strategies to refactor them
-are established. The goal of the refactorization is the extraction of these patterns from the main code without changing the behavior of the system. \del{The main constraint to refactoring the code is the
-preservation of a good performance of the cache mechanism}\ab{Section 2.4 says what are the requirements. Just remove the sentence}.
+are established. The goal of the refactorization is the extraction of these patterns from the main code without changing the behavior of the system.
 
 Several alternatives were explored to encapsulate the \emph{Cache
-Concern}. For example, one of the explored mechanisms was the separation
+Concern}. After exploring a variety of options such as the separation
 of the concern by means of the definition of an exclusive class for
-managing caches. While this solution provided a good modular design,
-it introduced indirections to access to the caches (\secref{problem}).
-Indirections caused a poor performance that slows down response times
-of the cache mechanism. For this reason, this is not a feasible solution\ab{It seems that we are repeating ourselves. Can this paragraph be removed?}.
-
-After exploring a variety of options such as the use of proxies to
+managing caches or the use of proxies to
 intercept messages, an approach based on code injection was chosen.
 This solution has the advantage of encapsulating the concern in a
 new unit while the code that it is finally executed after the injection
@@ -518,9 +512,9 @@ indicates the name of the cache that will be injected and \emph{patternCodeName}
 indicates the pattern code to be generated. For example, the pragma
 \emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates
 that the \emph{Lazy Initialization} pattern will be injected for the cache
-\emph{absoluteBoundsCache} in the method in which the pragma is defined. \ab{it also creates a variable in the class doesn't it?} \sv{No, the only addition into the original method is the pragma}\ab{Ok, but what happens with the instance variable?}
+\emph{absoluteBoundsCache} in the method in which the pragma is defined. \ab{it also creates a variable in the class doesn't it?} \sv{No, the only addition into the original method is the pragma}\ab{Ok, but what happens with the instance variable?}\sv{Sorry, I don't understand. What instance variable?}
 
-\ab{We are here describing the weaving approach} Once that the cache code is extracted into the pragmas, the code to
+\ab{We are here describing the weaving approach} \sv{But the weaving approach is the injection approach (just with another name). Isn't it?}Once that the cache code is extracted into the pragmas, the code to
 be injected is automatically generated before the execution of the
 system. Specifically, the automatic injection of a pragma in a method
 is achieved following the next steps: 
@@ -725,10 +719,6 @@ As can be seen, all the setences with references to the cache  \emph{lookupNodeC
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Results}\seclabel{results}
 
-\ab{We also need to provide some benchmarks. There is a class in mondrian that does exactly this}
-
-\ab{We need to be stronger on this section}
-
 The use of the presented patterns could be used to compose the caches
 behavior improving the maintenance of the system. In this line, the
 contribution of the approach is twofold. First, the mechanism of encapsulation
@@ -781,8 +771,6 @@ The core of Mondrian is not independent of the cache implementation. The logic o
 
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Discussion}\seclabel{discussion}
-
-\ab{What are the benefits of the approach? Can I unplug cache?}
 
 The injection mechanism may reorder statements in the instrumented method. This is the case of the reset method (which was presented in the previous section). As was shown, in this case the caches are resetted at the beginning of the method and after that the method \emph{resetElementsToLookup} and \emph{resetMetricCaches} are invocated in contrast with the original method in which the former was invocated at the beginning and the former at the end. Even though the order of calls is changed the behavior of the method is not modified. The consistent behavior was checked in a manual way and by mean of automatic test.
 
