@@ -367,11 +367,10 @@ We identified 5 code patterns based on Mondrian source code and are described be
 Each pattern is described with a relevant typical occurrence,
 the number of occurrences we found in Mondrian and an illustration.
 
-\paragraph{Reset Cache.} A cache has to be invalidated when its content has to be actualized. We refer to this action as reset. The reset structure is \emph{cache:=resetValue} where
-\emph{resetValue} depends on the cache internal structure. Typically,
-the \emph{resetValue} depends on the type of the stored value. It could be \ct{nil}, an empty dictionary, or a particular value (\eg \ct{0@0}).
+\paragraph{Reset Cache.} A cache has to be invalidated when its content has to be actualized. We refer to this action as reset. The code to express a reset is \emph{cache:=resetValue} where
+\emph{resetValue} and the initial value the cache has to have. Typically, the \emph{resetValue} depends on the type of the stored value. It could be \ct{nil}, an empty dictionary, or a particular value (\eg \ct{0@0}).
 Eighteen occurrences of this pattern are found in Mondrian. 
-We found that in some occurrences the reset of the caches is performed before the logic of the method, and other methods in which the reset must be done after. For example, the method \ct{MOGraphElement>>shapeBoundsAt: put:} resets the caches \emph{absoluteBoundsCache} and \emph{boundsCache} before modifying the cache cacheShapeBounds. In contrast, the method \ct{MONode>>translateBy: bounded:} resets the caches \emph{boundsCache} and \emph{absoluteBoundsCache} after executing most of the sentences of the method. 
+We found that in some occurrences the reset of the caches is performed before the logic of the method, and other methods in which the reset must be done after. For example, the method \ct{MOGraphElement>>shapeBoundsAt:put:} resets the caches \emph{absoluteBoundsCache} and \emph{boundsCache} before modifying the cache cacheShapeBounds. In contrast, the method \ct{MONode>>translateBy:bounded:} resets the caches \emph{boundsCache} and \emph{absoluteBoundsCache} after executing most of the sentences of the method. 
 
 Consider the method \ct{MOGraphElement>>resetCache}. This method is called whenever the user drag and drop a graphical element. In
 this method the \emph{Reset Cache} pattern is repeated in four occasions
@@ -390,14 +389,14 @@ MOGraphElement>>resetCache
 
 
 
-\paragraph{Lazy initialization.} In some situations it is not relevant to initialize the cache before it is actually needed. This happens when a graphical element is not outside the window. These caches are relevant only when the user actually see the element by scrolling the visualization. Typically, the structure of this pattern is: \emph{\^{} cache ifNil:[cache:=newValue]}. Mondrian contains five occurrences of a lazy cache initialization. Consider the \ct{bounds} method:
+\paragraph{Lazy initialization.} In some situations it is not relevant to initialize the cache before it is actually needed. This happens when a graphical element is not outside the window: no cache initialization is required for a graphical element if the element is not displayed. These caches are relevant only when the user actually see the element by scrolling the visualization. Typically, the structure of this pattern is: \emph{\^{} cache ifNil:[cache:=newValue]}. Mondrian contains five occurrences of a lazy cache initialization. Consider the \ct{bounds} method:
 
 \begin{lstlisting} 
 MOEdge>>bounds  
 	^ boundsCache ifNil:[boundsCache:= self shape computeBoundsFor: self ]. 
 \end{lstlisting}
 
-The circumscribed rectangle is returned by \ct{computeBoundsFor:} and is performed only when a edge is actually visible (\ct{bounds} is used in \ct{drawOn:}, the rendering method.
+The circumscribed rectangle is returned by \ct{computeBoundsFor:} and is performed only when an edge is actually visible (\ct{bounds} is used in \ct{drawOn:}, the rendering method.
 
 \paragraph{Cache Initialization.} This pattern represents a situation in
 which a value is assigned to a cache. The structure of the pattern
@@ -411,13 +410,12 @@ MOGraphElement>>cacheCanvas: aCanvas
 				extent: (self bounds extent + (2@2))). 
 \end{lstlisting}
 
-The method \ct{cacheCanvas:} only is invoked during testing in order to verify some characteristics of the caches such as their effectiveness.
+The method \ct{cacheCanvas:} is invoked only during testing in order to verify some characteristics of the caches such as their effectiveness.
 
 \paragraph{Return Cache.} This pattern shows the situation in which a cache
 is accessed. The structure of the pattern is the return of the cache:
-\emph{return cache}. This pattern is found in four occasions. Next,
-the method \emph{shapeBounds} is presented as an example in which
-cacheShapeBounds is accessed.
+\emph{return cache}. This pattern is found in four occasions. Next, the method \ct{shapeBounds} is presented as an example in which
+\emph{cacheShapeBounds} is accessed.
 
 \begin{lstlisting} 
 MOGraphElement>>shapeBounds  
@@ -436,11 +434,7 @@ MOGraphElement>>isCacheLoaded
 \end{lstlisting}
 
 
-
-
-
-
-Additionally, Table \ref{tab:Cache-Concern-scattering} gives the occurrences of each pattern in the MOGraphElement hierarchy,
+Additionally, Table \ref{tab:Cache-Concern-scattering} gives the occurrences of each pattern in the \ct{MOGraphElement} hierarchy,
 the methods involved in each pattern, and the caches related with
 a pattern.
 
