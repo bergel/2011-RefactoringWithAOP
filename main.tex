@@ -357,7 +357,7 @@ are grouped together based on the purpose of its use (\eg saving information, ob
 The task of group the fragments of code of the different caches is
 achieved with the goal of identifying possible strategies for refactoring\ab{I do not understand this sentence. ``The task of group'' ?}.
 These groups allows the identification of code patterns that are
-repeated in the use of the caches. For each pattern found a refactoring strategy is associated. These code patterns are described in the following subsections.
+repeated in the use of the caches. For each pattern found an aspect is associated. These code patterns are described in the following subsections.
 
 %========
 \subsection{Pattern Description\label{sub:Pattern-Identification}}
@@ -478,42 +478,32 @@ Total  & 32 & 24 & \multicolumn{1}{c}{}\tabularnewline
 \figref{PatternLocation} shows the distribution of the caches over the main Mondrian classes. In this figure, the methods in which the caches are used are shown. Also, \figref{PatternLocation} shows in which class each cache is defined. As can be seen, the caches are used and defined across the whole class hierarchy.
 
 %========
-\subsection{Refactoring Strategy}
-
-\ab{I was wondering. Why not to rename this section as ``Memoization as an aspect''? After some discussion with Eric, we are still doing aop, even without AspectJ or an explicit aspect language. We could then use "weaving" instead of "injection"}
+\subsection{Cache concerns as aspects}
 
 Once the code patterns are identified, strategies to refactor them
-are established. The goal of the refactorization is the extraction of these patterns from the main code without changing the behavior of the system.
+are established. The goal of the refactorization is the separation of these patterns from the main code without changing the overall behavior, enforced by an extended set of unit tests.
 
-Several alternatives were explored to encapsulate the \emph{Cache
-Concern}. After exploring a variety of options such as the separation
-of the concern by means of the definition of an exclusive class for
-managing caches or the use of proxies to
-intercept messages, an approach based on code injection was chosen.
-This solution has the advantage of encapsulating the concern in a
-new unit while the code that it is finally executed after the injection
-is similar to the original code of \emph{Mondrian}. So, the performance
-is not affected. In order to encapsulate the source code related with
-the code patterns the \emph{pragma} mechanism is used. \emph{Pragmas}
-are the method annotation syntax implemented by Pharo.
+The refactoring is realized by encapsulating each of the nine cache into an aspect. Aspect definition weaving is achieved via a custom AOP mechanism based on code annotation and source code manipulation. 
 
-The refactoring strategy used is: for each method that contains code
-related to the \emph{Cache Concern}, the code related to the concern
-is extracted using a pragma that is defined in the method. The decision
-to define the pragma inside the method is in order to allow a better
-visibility of the code that is injected. The pragmas used have a structure
-according to each code pattern.\emph{ }In general, the pragmas structure
-is \emph{$<$patternCodeName: cacheName$>$} where \emph{cacheName}
-indicates the name of the cache that will be injected and \emph{patternCodeName}
-indicates the pattern code to be generated. For example, the pragma
-\emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates
-that the \emph{Lazy Initialization} pattern will be injected for the cache
-\emph{absoluteBoundsCache} in the method in which the pragma is defined. \ab{it also creates a variable in the class doesn't it?} \sv{No, the only addition into the original method is the pragma}\ab{Ok, but what happens with the instance variable?}\sv{Sorry, I don't understand. What instance variable?}
+%Several alternatives were explored to encapsulate the \emph{Cache
+%Concern}. After exploring a variety of options such as the separation
+%of the concern by means of the definition of an exclusive class for
+%managing caches or the use of proxies to
+%intercept messages, an approach based on code injection was chosen.
+%This solution has the advantage of encapsulating the concern in a
+%new unit while the code that it is finally executed after the injection
+%is similar to the original code of \emph{Mondrian}. So, the performance
+%is not affected. In order to encapsulate the source code related with
+%the code patterns the \emph{pragma} mechanism is used. \emph{Pragmas}
+%are the method annotation syntax implemented by Pharo.
 
-\ab{We are here describing the weaving approach} \sv{But the weaving approach is the injection approach (just with another name). Isn't it?}Once that the cache code is extracted into the pragmas, the code to
-be injected is automatically generated before the execution of the
-system. Specifically, the automatic injection of a pragma in a method
-is achieved following the next steps: 
+The refactoring strategy used is: for each method that involve a cache, the part of the method that directly deals with the cache is removed and the method is annotated.
+%The decision to define the pragma inside the method is in order to allow a better visibility of the code that is injected. 
+The annotation is defined along the cache pattern associated to the cache access removed from the method.
+The pragmas structure is \emph{$<$patternCodeName: cacheName$>$} where \emph{cacheName} indicates the name of the cache to consider and \emph{patternCodeName} indicates the pattern code to be generated. For example, the pragma \emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates that the \emph{Lazy Initialization} pattern will be ``weaved'' for the cache \emph{absoluteBoundsCache} in the method in which the annotation is defined.
+
+The weaving is realized via a custom code injection mechanism. For each annotation a method may have, the code injector performs the necessary source code transformation to use the cache. Specifically, the weaving is achieved through the following steps:
+
 \begin{enumerate}
 \item A new method is created with the same name that the method that contains
 the pragma but with the prefix {}``compute'' plus the name of the
@@ -543,7 +533,7 @@ MOGraphElement>>absoluteBounds
 In this way, the refactored cache code is executed with Mondrian.
 
 In order to automatically generate the code to be injected, the injector
-code mechanism provides a \emph{CachePattern} interface. In this way,
+code mechanism provides a \emph{CachePattern} interface\ab{Interface? I do not understand. Are you referring to the class hierarchy given in Figure 3}. In this way,
 each cache pattern has to implements this interface which allow the
 generation of the methods mentioned above. Basically each subclass
 is responsible of the definition of the pragma to be used and the
