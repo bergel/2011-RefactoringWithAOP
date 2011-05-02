@@ -291,12 +291,22 @@ Extending the range of applications for Mondrian turns some of the caches sensel
 \paragraph{Using delegation.}
 We first tried to address this problem by relying only on explicit objects, one for each cache. This object would offer the necessary operations for accessing and resetting a cache.
 
-As exemplified with the \ct{absoluteBounds} method given above, the caches are implemented by means of dedicated instance variables defined in the \ct{MOGraphElement} class. That is to say, each cache is associated with an instance variable.
+As exemplified with the \ct{absoluteBounds} method given above, the caches are implemented by means of dedicated instance variables defined in the \ct{Cache} class. That is to say, each cache is associated with an instance variable. In this way, a variable of the Cache class, called \ct{generalCache}, is defined in the \ct{MOGraphElement} class. Through this variable the different caches can be accesed by mean of the \ct{cacheAt:(key)} method where \ct{key} is a string with the name of the cache.
 %The goal of the refactoring is the extraction of the \emph{Cache Concern} by means of the creation of a specific class to delegate the behavior of the caches\ab{Do we need this sentence, I guess no}. 
 
 %To accomplish this task could be used, for example, a strategy which uses a class containing a collection of caches and each cache can contain different types of items (as is shown in Fig. \ref{fig:Cache-behaviour-delegation.}). 
 \figref{Cache-behaviour-delegation} illustrates this situation where a graph element has one instance of the \ct{Cache} class, itself referencing to many instances of \ct{CacheableItem}, one for each cache.
 %In this case, all the cache variables and the fragments of code of the methods in which they were used were encapsulated using the \emph{Cache} class and creating a suitable \emph{CacheableItem}. So, with this solution, only remain a reference in \emph{MOGraphElement} class to the \emph{Cache} class that contains all the caches\ab{I do not understand. Did I just say that?} \sv{trato de justificar que se gana con esta solucion. Lo bueno era que solo quedaba una referencia a la clase contenedora de los caches en MOGraphElement}. 
+
+Below is shown how is written the \ct{absoluteBounds} method following this approach: 
+\begin{lstlisting} 
+MOGraphElement>>absoluteBounds
+	<b>(generalCache cacheAt: 'absoluteBoundsCache')</b> ifCacheNil: [
+	<b>(generalCache cacheAt: 'absoluteBoundsCache')</b>
+	 putElement: (self shape absoluteBoundsFor: self)].
+	^ <b>(generalCache cacheAt: 'absoluteBoundsCache')</b> getInternalCache.
+\end{lstlisting}
+As can be seen, with this approach the different instance variables related with the caches are replaced by a unique variable called \ct{generalCache}. On the other hand, the legibility of the method is deteriorated as well as the performance.
 
 \paragraph{Significant overhead.} This modularization solely based on delegating message has a significant overhead at execution time
 because of additional indirection.
@@ -310,7 +320,7 @@ being the delay proportional to the number of elements.
 \includegraphics[bb=27bp 615bp 338bp 762bp,scale=0.97]{CacheMechanisms} 
 \par\end{centering}
 
-\caption{Cache behavior delegation.\label{fig:Cache-behaviour-delegation}\ab{How is absoluteBounds written in that case?}}
+\caption{Cache behavior delegation.\label{fig:Cache-behaviour-delegation}}
 
 \end{figure*}
 
@@ -355,7 +365,8 @@ are grouped together based on the purpose of its use (\eg saving information, ob
 \item Store data in the cache: the code fragments grouped here store information into a cache variable.
 \end{itemize}
 The task of group the fragments of code of the different caches is
-achieved with the goal of identifying possible strategies for refactoring\ab{I do not understand this sentence. ``The task of group'' ?}.
+achieved with the goal of identifying possible strategies for refactoring\ab{I do not understand this sentence. ``The task of group'' ?}\sv{Mas arriba habia puesto "the fragment of codes in which the caches are used
+are grouped together based on the purpose of its use". A eso me refiero con "The task of group", la tarea de agrupar el codigo segun lo que hacen}.
 These groups allows the identification of code patterns that are
 repeated in the use of the caches. For each pattern found a refactoring strategy is associated. These code patterns are described in the following subsections.
 
