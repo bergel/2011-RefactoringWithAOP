@@ -298,7 +298,7 @@ As exemplified with the \ct{absoluteBounds} method given above, the caches are i
 \figref{Cache-behaviour-delegation} illustrates this situation where a graph element has one instance of the \ct{Cache} class, itself referencing to many instances of \ct{CacheableItem}, one for each cache.
 %In this case, all the cache variables and the fragments of code of the methods in which they were used were encapsulated using the \emph{Cache} class and creating a suitable \emph{CacheableItem}. So, with this solution, only remain a reference in \emph{MOGraphElement} class to the \emph{Cache} class that contains all the caches\ab{I do not understand. Did I just say that?} \sv{trato de justificar que se gana con esta solucion. Lo bueno era que solo quedaba una referencia a la clase contenedora de los caches en MOGraphElement}. 
 
-Below is shown how is written the \ct{absoluteBounds} method following this approach: 
+Below is shown how is written the \ct{absoluteBounds} method following this approach:  
 \begin{lstlisting} 
 MOGraphElement>>absoluteBounds
 	<b>(generalCache cacheAt: 'absoluteBoundsCache')</b> ifCacheNil: [
