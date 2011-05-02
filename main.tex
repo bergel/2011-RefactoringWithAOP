@@ -191,23 +191,27 @@ an abstract
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Introduction}\seclabel{introduction}
 
-Coping with emerging requirements is probably one of the most difficult challenge in software engineering~\cite{Somm00a}. 
-
 %problem
-Mondrian is an agile visualization engine. It is used in more than a dozen projects. New requirements set by the increasing set of clients have an impact on assumptions that were hold for years. 
+Coping with emerging requirements is probably one of the most difficult challenges in software engineering~\cite{Somm00a}. 
 
-Mondrian use simple two-dimensions rendering to graphically visualize an arbitrary domain. 
-One of strong assumption Mondrian holds is the structure of its multiple cache mechanisms. Mondrian's caches are instance of the memoization technique\footnote{\url{http://www.tfeb.org/lisp/hax.html\#MEMOIZE}}. Sending twice the same message returns the same value if no side effect impact the computation. 
+This paper presents a solution to a maintenance problem we recently faced while developing the Mondrian application.
+Mondrian is an agile visualization engine. It is used in more than a dozen projects. As in many software developments, new requirements set by the increasing set of clients have an impact on assumptions that were hold for years. 
 
-Unfortunately, the new requirements of Mondrian defeats the purpose of some of the caches it defines. One example is the bounds computation to obtain the circumscribed rectangle of a two-dimensional graphical element. This cache is useful when Mondrian is used to visualize 3d.
+Mondrian uses simple two-dimensions rendering to graphically visualize an arbitrary domain. Mondrian is almost exclusively used to visualize software metrics. It allows for a wide range of visual representations\footnote{\url{http://www.moosetechnology.org/docs/visualhall}}.
+One of the strong assumptions that Mondrian holds is the structure of its multiple cache mechanisms. 
+
+Mondrian has 9 caches spread over the graphical element hierarchy. 
+The caches aim to quickly render two dimensional widgets, graphically composed of rectangle and line shapes. Mondrian's caches are instance of the memoization technique\footnote{\url{http://www.tfeb.org/lisp/hax.html\#MEMOIZE}}. Sending twice the same message returns the same value if no side effect impact the computation. 
+
+Unfortunately, the new requirements of Mondrian defeats the purpose of some of the caches it defines. One example is the bounds computation to obtain the circumscribed rectangle of a two-dimensional graphical element. This cache is senseless in a 3D setting. Bypassing the cache result in a complex extension of Mondrian.
 
 %solution
 We have first identified where the caches are implemented and how they interact with the rest of the application.
 For each cache, we marked methods that initialize the cache and reset it. 
-We subsequently undertaken a major refactoring of Mondrian's core: caches are not externalized and structured along a class hierarchy.
+We have subsequently undertaken a major refactoring of Mondrian's core: we have produced a prototyping version of Mondrian in which caches are externalized from the base code. Our refactoring was realized via a custom aspect mechanism.
 
 %surprising result
-We were able to modularize the cache while preserving the overall architecture. Performances did not suffer from the refactoring.
+We were able to modularize the cache while preserving the overall architecture and Mondrian performances did not suffer from the refactoring.
 
 %contribution
 The paper makes the following contributions:
@@ -250,7 +254,7 @@ This section details a maintenance problem we have faced when developing Mondria
 \subsection{Turning Mondrian into a framework}
 
 Mondrian\footnote{\url{http://www.moosetechnology.org/tools/mondrian}}~\cite{Meye06a} is an agile visualization library. A domain specific language is provided to easily define interactive visualizations.
-Visualizations are structured along a graph structured, made of possibly nested nodes and edges. Mondrian is a crucial component which is used in more than a dozen independent projects. To meet clients performance requirements, Mondrian authors are paying a great attention to provide fast and scalable rendering. To that purpose, Mondrian contains a number of cache to avoid redundant code executions.
+Visualizations are structured along a graph structured, made of possibly nested nodes and edges. Mondrian is a crucial component, used in more than a dozen independent projects. To meet clients performance requirements, Mondrian authors are paying a great attention to provide fast and scalable rendering. To that purpose, Mondrian contains a number of caches to avoid redundant code executions.
 
 Mondrian is now on the verge to become a visualization engine framework versus a library as it is currently. Mondrian is now used in situations that were not originally planned. For example, Mondrian has been used to visualize the real-time behavior of animated robots\footnote{\url{http://www.squeaksource.com/Calder.html}}, 3D visualizations\footnote{\url{http://www.squeaksource.com/Klotz.html}}, whereas Mondrian has been originally designed to visualize software source code using plain 2D drawing~\cite{Lanz03d}. The caches that are intensively used when visualizing software are not useful and may even be a source of slowdown and complexity when visualizing animated robots. 
 
@@ -269,7 +273,7 @@ MOGraphElement>>absoluteBounds
 		</b>self shape absoluteBoundsFor: self
 \end{lstlisting}
 
-The method \ct{absoluteBoundsFor:} realizes heavy computation to determine the smallest rectangle that contains all the nested elements. Since this method does not perform any global side effect, the class \ct{MOGraphElement} defines an instance variable called \ct{absoluteBoundsCache} which is initialized at the first invocation of \ct{absoluteBounds}. Subsequent invocation will therefore use the result previously computed. 
+The method \ct{absoluteBoundsFor:} realizes a heavy computation to determine the smallest rectangle that contains all the nested elements. Since this method does not perform any global side effect, the class \ct{MOGraphElement} defines an instance variable called \ct{absoluteBoundsCache} which is initialized at the first invocation of \ct{absoluteBounds}. Subsequent invocation will therefore use the result previously computed. 
 
 Obviously, the variable \ct{absoluteBoundsCache} needs to be set to \ct{nil} when the bounds of the element are modified (\eg adding a new nested node, drag and dropping).
 
@@ -278,11 +282,11 @@ Obviously, the variable \ct{absoluteBoundsCache} needs to be set to \ct{nil} whe
 %=========
 \subsection{Problem.}
 
-Mondrian intensively uses memoization for most of it computation. A user-performed interaction that leads to an update of the visualization invalidate the visualization. These memoization have were gradually introduced over the long development of Mondrian (which started in 2006). Each unpredicted usage leaded to a performance problem was has been solved using a new memoization. There is about 32 memoizations in the current version of Mondrian.
+Mondrian intensively uses memoization for most of it computation. A user-performed interaction that leads to an update of the visualization invalidates the visualization. These memoization have were gradually introduced over the development of Mondrian (which started in 2006). Each unpredicted usage leaded to a performance problem was has been solved using a new memoization. There is about 32 memoizations in the current version of Mondrian.
 
-These caches have been shaped along the common usage of Mondrian. Visualizations produced in Mondrian are \emph{all} static, employ colored geometrical objects and interactions are offered by simply on these objects.
+These caches have been shaped along the common usage of Mondrian. Visualizations produced in Mondrian are \emph{all} static, employ colored geometrical objects.
 
-Extending the range of applications for Mondrian invalidate some of the caches. For example \ct{absoluteBoundsCache} has no meaning in the three-dimensional version of Mondrian since the circumscribed rectangle is meaningful only with two dimensions.
+Extending the range of applications for Mondrian turns some of the caches senseless. For example \ct{absoluteBoundsCache} has no meaning in the three-dimensional version of Mondrian since the circumscribed rectangle is meaningful only with two dimensions.
 
 \paragraph{Using delegation.}
 We first tried to address this problem by relying only on explicit objects, one for each cache. This object would offer the necessary operations for accessing and resetting a cache.
@@ -294,10 +298,9 @@ As exemplified with the \ct{absoluteBounds} method given above, the caches are i
 \figref{Cache-behaviour-delegation} illustrates this situation where a graph element has one instance of the \ct{Cache} class, itself referencing to many instances of \ct{CacheableItem}, one for each cache.
 %In this case, all the cache variables and the fragments of code of the methods in which they were used were encapsulated using the \emph{Cache} class and creating a suitable \emph{CacheableItem}. So, with this solution, only remain a reference in \emph{MOGraphElement} class to the \emph{Cache} class that contains all the caches\ab{I do not understand. Did I just say that?} \sv{trato de justificar que se gana con esta solucion. Lo bueno era que solo quedaba una referencia a la clase contenedora de los caches en MOGraphElement}. 
 
-\paragraph{Significant overhead.} This modularization solely based on delegating message has a sever overhead at execution time
-because of additional indirection. This causes
-a significant overhead.
-So, the separation of this concern is not a trivial problem. Specifically,
+\paragraph{Significant overhead.} This modularization solely based on delegating message has a significant overhead at execution time
+because of additional indirection.
+The separation of this concern is not a trivial problem. Specifically,
 when this solution the caches mechanism was 3 to 10 times slower,
 being the delay proportional to the number of elements.
 
@@ -344,16 +347,15 @@ Nine different caches are found in Mondrian: \emph{cacheShapeBounds},
 internal structure according to what is stored: \emph{boundsCache} will hold an instance of the class \ct{Rectangle} and \emph{cacheForm} an instance of a bitmap \ct{Forms}, for example.
 
 
-After this initial
-identification, the fragment of codes (in which the caches are used)
-are grouped together based on the purpose of its use (eg. saving information, obtaining the data stored, etc.). Each group is associated with different activities:
+After this initial identification, the fragment of codes in which the caches are used
+are grouped together based on the purpose of its use (\eg saving information, obtaining the data stored). Each group is associated with different activities:
 \begin{itemize}
 \item Initialize and reset the cache: the fragments of code in this group initialize or reset a cache variable putting them in nil or creating an instance of an object.
-\item Retrieve the cache value: this group obtain the information that is saved in a cache.
-\item Store data in the cache: the code fragments grouped here save information into a cache varible such as an instance of a class.
+\item Retrieve the cache value: this group obtains the information that is saved in a cache.
+\item Store data in the cache: the code fragments grouped here store information into a cache variable.
 \end{itemize}
 The task of group the fragments of code of the different caches is
-achieved with the goal of identifying possible strategies for refactoring.
+achieved with the goal of identifying possible strategies for refactoring\ab{I do not understand this sentence. ``The task of group'' ?}.
 These groups allows the identification of code patterns that are
 repeated in the use of the caches. For each pattern found a refactoring strategy is associated. These code patterns are described in the following subsections.
 
@@ -804,7 +806,7 @@ Finally, AOP has been used for some mechanisms of cache in the past. Bouchenak e
 % bibliography
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \bibliographystyle{abbrvnat}
-\bibliography{scg}
+\bibliography{scg,MondrianRefParcial}
 
 \end{document}
 
