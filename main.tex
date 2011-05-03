@@ -545,7 +545,7 @@ MOGraphElement>>absoluteBounds
 In this way, the refactored cache code is executed with Mondrian.
 
 In order to automatically generate the code to be injected, the injector
-code mechanism provides a \emph{CachePattern} interface\ab{Interface? I do not understand. Are you referring to the class hierarchy given in Figure 3}. In this way,
+code mechanism provides a \emph{CachePattern} interface\ab{Interface? I do not understand. Are you referring to the class hierarchy given in Figure 3}\sv{Si me refiero a eso. Gracias por darte cuenta del error. En realidad es una clase abstracta: CachePattern}. In this way,
 each cache pattern has to implements this interface which allow the
 generation of the methods mentioned above. Basically each subclass
 is responsible of the definition of the pragma to be used and the
