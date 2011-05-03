@@ -175,7 +175,7 @@
 	{cmarcos@exa.unicen.edu.ar}
 \authorinfo{Alexandre Bergel}
 	{PLEIAD Lab, Department of Computer Science (DCC), University of Chile, Santiago, Chile}
-	{abergel@dcc.uchile.cl}
+	{http://bergel.eu}
 \authorinfo{Gabriela Ar\'evalo}
 
 
@@ -185,7 +185,9 @@
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 \begin{abstract}
-an abstract
+Unanticipated evolution of software is an activity difficult to realize. This paper present a maintenance problem we faced while trying to evolve Mondrian, an open-source visualization engine: caches are now irrelevant with planned extension of Mondrian.
+
+The solution we adopted is to refactor these caches into a well defined aspect. This has been achieved without incurring a runtime penalty.
 \end{abstract}
 
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -214,20 +216,21 @@ We have subsequently undertaken a major refactoring of Mondrian's core: we have 
 We were able to modularize the cache while preserving the overall architecture and Mondrian performances did not suffer from the refactoring.
 
 %contribution
-The paper makes the following contributions:
-
-\begin{itemize}
-\item identification of memoizing cross-cutting concern 
-\item refactorization of these cross-cutting concerns into modular and pluggable aspects
-\item lesson learnt
-\end{itemize}
-
+The paper makes the following contributions: (i) identification of memoizing cross-cutting concern and (ii) refactorization of these cross-cutting concerns into modular and pluggable aspects.
+%\item lesson learnt
 
 %outline
+The paper is structured as follows.
+\secref{problem} shows the problem we faced when trying to evolve Mondrian.
+\secref{refactoring} describes the aspect-based solution we adopted.
+\secref{results} presents the impact of our solution on Mondrian.
+\secref{relatedWork} briefly revise the related work.
+\secref{conclusion} concludes.
+
 
 %The story to tell in this paper is the following one:
 %1) We have the actual Mondrian code
-%2) Santiago have extracted the CC into pragmas
+%2) Santiago have extracted the CC into annotations
 %3) He has identified different possible pragmas. Here some patterns could be identified based on the code (That's the POINT of the paper)
 %4) Once we have the pragmas, we can think of an injection machine to produce new code.
 %This new code is semantically equivalent to the original one, but not syntactically the same. This is not so important since all the large set of Mondrian unit tests has the last word on it.
@@ -337,7 +340,7 @@ Refactoring Mondrian is a task that has to be realized with care. In particular,
 \end{itemize}
 
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-\section{Refactoring}\seclabel{refactoring}
+\section{Aspect-based Refactoring}\seclabel{refactoring}
 
 
 The goal of the refactoring is the separation of the \emph{Cache
@@ -372,7 +375,7 @@ These groups allows the identification of code patterns that are
 repeated in the use of the caches. For each pattern found an aspect is associated. These code patterns are described in the following subsections.
 
 %========
-\subsection{Pattern Description\label{sub:Pattern-Identification}}
+\subsection{Pattern Description}\seclabel{Pattern-Identification}
 
 
 We identified 5 code patterns based on Mondrian source code and are described below.
@@ -512,13 +515,13 @@ The refactoring is realized by encapsulating each of the nine cache into an aspe
 The refactoring strategy used is: for each method that involve a cache, the part of the method that directly deals with the cache is removed and the method is annotated.
 %The decision to define the pragma inside the method is in order to allow a better visibility of the code that is injected. 
 The annotation is defined along the cache pattern associated to the cache access removed from the method.
-The pragmas structure is \emph{$<$patternCodeName: cacheName$>$} where \emph{cacheName} indicates the name of the cache to consider and \emph{patternCodeName} indicates the pattern code to be generated. For example, the pragma \emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates that the \emph{Lazy Initialization} pattern will be ``weaved'' for the cache \emph{absoluteBoundsCache} in the method in which the annotation is defined.
+The annotations structure is \emph{$<$patternCodeName: cacheName$>$} where \emph{cacheName} indicates the name of the cache to consider and \emph{patternCodeName} indicates the pattern code to be generated. For example, the annotation \emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates that the \emph{Lazy Initialization} pattern will be ``weaved'' for the cache \emph{absoluteBoundsCache} in the method in which the annotation is defined.
 
 The weaving is realized via a custom code injection mechanism. For each annotation a method may have, the code injector performs the necessary source code transformation to use the cache. Specifically, the weaving is achieved through the following steps:
 
 \begin{enumerate}
 \item A new method is created with the same name that the method that contains
-the pragma but with the prefix {}``compute'' plus the name of the
+the annotation but with the prefix {}``compute'' plus the name of the
 class in which is defined. For example, given the next method
 \begin{lstlisting} 
 MOGraphElement>>absoluteBounds
@@ -532,33 +535,33 @@ MOGraphElement>>computeMOGraphElementAbsoluteBounds
 	^ self shape absoluteBoundsFor: self
 \end{lstlisting}
 \item The code inside the original method is replaced by the code automatically
-generated according to the pattern defined in the pragma. This generated
+generated according to the pattern defined in the annotation. This generated
 method contains a call to the new method of the Step 1.
 \begin{lstlisting} 
 MOGraphElement>>absoluteBounds
 	absoluteBoundsCache 
 		ifNotNil: [ ^ absoluteBoundsCache].
 	^ absoluteBoundsCache:=
-		(self computeMOGraphElementabsoluteBounds)
+		(self computeMOGraphElementAbsoluteBounds)
 \end{lstlisting}
 \end{enumerate}
-In this way, the refactored cache code is executed with Mondrian.
 
-In order to automatically generate the code to be injected, the injector
-code mechanism provides a \emph{CachePattern} interface\ab{Interface? I do not understand. Are you referring to the class hierarchy given in Figure 3}\sv{Si me refiero a eso. Gracias por darte cuenta del error. En realidad es una clase abstracta: CachePattern}. In this way,
-each cache pattern has to implements this interface which allow the
-generation of the methods mentioned above. Basically each subclass
-is responsible of the definition of the pragma to be used and the
-generation of the code sentences to be injected related with the cache
-whereas the interface \emph{CachePattern} creates the methods to be
-added to the system. This class hierarchy is shown in Fig. \ref{fig:Pattern-hierarchy.}.
+In order to automatically generate the code to be injected, the code weaver uses a class hierarchy (\figref{Pattern-hierarchy}), rooted in the abstract \ct{CachePattern}.
+\ct{CachePattern} contains the methods necessary for processing annotations (called pragmas in the Pharo terminology). Each subclass override \ct{generateMethodWith:} to perform the source code manipulation.
+
+%Each cache pattern has to implements this interface which allow the
+%generation of the methods mentioned above. Basically each subclass
+%is responsible of the definition of the pragma to be used and the
+%generation of the code sentences to be injected related with the cache
+%whereas the interface \emph{CachePattern} creates the methods to be
+%added to the system. This class hierarchy is shown in Fig. \ref{fig:Pattern-hierarchy.}.
 %
 \begin{figure*}
 \begin{centering}
 \includegraphics[bb=21bp 541bp 561bp 789bp,scale=0.7]{PatternInheritance}
 \par\end{centering}
 
-\caption{Pattern hierarchy.\label{fig:Pattern-hierarchy.}}
+\caption{Pattern hierarchy.\figlabel{Pattern-hierarchy}}
 
 \end{figure*}
 
@@ -566,23 +569,23 @@ added to the system. This class hierarchy is shown in Fig. \ref{fig:Pattern-hier
 Next, the refactorings applied to each code pattern are presented.
 
 \paragraph{Reset Cache.} In order to refactor this pattern each statement
-that resets a cache was extracted using a pragma. The pragma contains
-the cache to be resetted. Owing to in some cases the resets are done
+that resets a cache was extracted using a annotation. The annotation contains
+the cache to be resetted. Since in some cases the resets are done
 at the beginning of a method and others at the end, a hierarchy of
-Reset Cache pattern is created. As is shown in Fig. \ref{fig:Pattern-hierarchy.},
+Reset Cache pattern is created. As shown in \figref{Pattern-hierarchy.},
 this hierarchy is composed of the classes \emph{AbstractResetCachePattern},
 \emph{BeforeResetCachePattern}, and \emph{AfterResetCachePattern}.
-The pragmas are defined in the classes at the bottom of the hierarchy
+The annotations are defined in the classes at the bottom of the hierarchy
 as $<$BeforeResetCachePattern: cacheName$>$ and $<$AfterResetCachePattern:
-cacheName$>$ respectively. For example, in the case presented in Section
-\ref{sub:Pattern-Identification} of the method \emph{resetCache},
-a pragma is defined for each reset of a cache leaving a cleaner code
+cacheName$>$ respectively. For example, in the case presented in 
+\secref{Pattern-Identification} of the method \emph{resetCache},
+a annotation is defined for each reset of a cache leaving a cleaner code
 in the method. In this case all the resets are done before the method
-call, so the pragmas used are the defined by \emph{BeforeResetCachePattern}.
+call, so the annotations used are the defined by \emph{BeforeResetCachePattern}.
 Even though the order of calls is changed (in comparison with the
 original method), the method behavior is not modified. The code to
 be generated will reset the cache defined
-in the pragma. Following, the refactored code is presented:
+in the annotation. Following, the refactored code is presented:
 
 \begin{lstlisting} 
 MOGraphElement>>resetCache 
@@ -594,8 +597,7 @@ MOGraphElement>>resetCache
 	self resetMetricCaches
 \end{lstlisting}
 
-The methods \emph{resetElementsToLookup} and \emph{resetMetricCaches} 
-performs additional activities that do not involve the cache variables. For this reason they remain in the \emph{resetCache} method.
+The methods \emph{resetElementsToLookup} and \emph{resetMetricCaches} performs additional actions that do not involve the cache variables. For this reason they remain in the \emph{resetCache} method.
 
 After the code injection the resetCache method is transformed into:
 
@@ -608,7 +610,7 @@ MOGraphElement>>resetCache
 	self computeMOGraphElementresetCache 
 \end{lstlisting}
 
-where the method computeMOGraphElementresetCache is:
+where the method \ct{computeMOGraphElementresetCache} is:
 
 \begin{lstlisting} 
 MOGraphElement>>computeMOGraphElementresetCache
@@ -620,12 +622,12 @@ This mechanism of injection of the generated code is the same for
 the rest of the patterns.
 
 \paragraph{Lazy Initialization.} To refactor this pattern
-the precondition checking is encapsulated into a pragma defined as
+the precondition checking is contained into an annotation defined as
 $<$LazyInitializationPattern: cacheName$>$. Given that
 the cache is initialized with a value when the precondition fails,
 the original method is modified to return this value. For example,
 in the case of the \emph{bounds} method presented in the previous
-section, the code related to the cache is extracted using the pragma
+section, the code related to the cache is extracted using the annotation
 and only the value to initialize the cache remains in the method as
 shown the code below:
 
@@ -642,10 +644,9 @@ boundsCache:= computeMOEdgeBounds.}
 \paragraph{Cache Initialization.} The refactorization of this cache is
 similar to the last one. Given that the structure of the pattern is
 an assignation, the first section of the assignation (\emph{cacheName:=})
-will be generated automatically by the code injection mechanism using
-a pragma defined as $<$CacheInitializationPattern: cacheName$>$.
-So, only the value at which is initialized remains in the method.
-In the case of the example presented in Section \ref{sub:Pattern-Identification},
+will be generated automatically by the weaver using an annotation $<$CacheInitializationPattern: cacheName$>$.
+The value at which the cache is initialized constitutes the method's body.
+In the case of the example presented in \secref{Pattern-Identification},
 the refactored code is shown below:
 
 \begin{lstlisting} 
@@ -656,7 +657,7 @@ MOGraphElement>>cacheCanvas: aCanvas
 \end{lstlisting}
 
 \paragraph{Return Cache.} In this refactorization the entire return clause
-is encapsulated by the pragma. The pragma is defined as $<$ReturnCachePattern:
+is encapsulated by the annotation. The annotation is defined as $<$ReturnCachePattern:
 cacheName$>$. Following, the refactored code for the example shown in
 the last section is presented:
 
@@ -666,18 +667,17 @@ the last section is presented:
 \end{lstlisting}
 
 \paragraph{Cache Loaded.} In order to refactor this pattern the cache checking
-is encapsulated by a pragma defined as $<$CacheLoadedPattern:
+is encapsulated by a annotation defined as $<$Cache\-Loaded\-Pattern:
 cacheName$>$. The code generated contains a sentence in which the checking
-is done for all the caches defined in the pragmas of this pattern
-contained in a method. In the case of the example presented in Section
-\ref{sub:Pattern-Identification}, the refactored code is shown below:
+is done for all the caches defined in the annotations of this pattern
+contained in a method. In the case of the example presented in \secref{Pattern-Identification}, the refactored code is shown below:
 \begin{lstlisting} 
 MOGraphElement>>isCacheLoaded 
 	<CacheLoadedPattern: #cacheForm>
 \end{lstlisting}
 
 With the use of these patterns the \emph{Cache Concern} is refactorized
-properly in more than 85\% of the methods of the \ct{MOGraphElement} hierarchy that uses one or more caches. \ab{Does it mean that 85\% of Mondrian methods use a cache?} \sv{No, I mean that from all the methods that uses a cache 85\% could be refactored with the pattern structure}
+properly in more than 85\% of the methods of the \ct{MOGraphElement} hierarchy that uses one or more caches.
 The main reason because some of the uses of the caches are not encapsulated by means of 
 cache patterns are (1) the code belongs to a cache pattern but the code related with the cache is too mixed 
 with the main concern, or (2) the code does not match with any of the patterns described. For example the method
@@ -693,16 +693,16 @@ MOGraphElement>>nodeWith: anObject ifAbsent: aBlock
 could not been refactored because the cache \emph{lookupNodeCache} is used to make different computations across the whole
 method by which is closely tied to the main concern. 
 These uses of the caches that are not encapsulated
-by patterns are also refactored by means of pragmas. For these cases
-a \emph{Generic AOP} pattern is used. The pragmas used have the structure
-\emph{$<$cache: cacheName before: '' after: ''$>$} where \emph{cache}
+by patterns are also refactored by means of annotations. For these cases
+a \emph{Generic AOP} pattern is used. The annotations used have the structure
+\emph{$<$cache: cacheName before: beforeCode after: afterCode $>$} where \emph{cache}
 indicates the name of the cache that will be injected. The clauses
 before and after indicate the source code that will be injected and
 when it will be injected in regard to the execution of the method.
 That is to say, the code inside the original method will be replaced
-by the code pointed out in the before clause of the pragma, a call
+by the code pointed out in the before clause of the annotation, a call
 to the new method will be added, and the code contained in the after
-clause of the pragma will be added at the end. For example, the refactorization of the method presented previously is
+clause of the annotation will be added at the end. For example, the refactorization of the method presented previously is
 \begin{lstlisting} 
 MOGraphElement>>nodeWith: anObject ifAbsent: aBlock  
 	<cache: #lookupNodeCache before:'	lookupNodeCache ifNil: [lookupNodeCache := IdentityDictionary new ]. 			
@@ -712,16 +712,16 @@ MOGraphElement>>nodeWith: anObject ifAbsent: aBlock
 	nodeLookedUp := self nodes detect: [:each | each model = anObject ] ifNone: aBlock.
 	^ nodeLookedUp
 \end{lstlisting}
-As can be seen, all the setences with references to the cache  \emph{lookupNodeCache} are encapsulated into the before clause of the pragma.
+As can be seen, all the code with references to the cache  \emph{lookupNodeCache} are encapsulated into the before clause of the annotation.
 
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Results}\seclabel{results}
 
-The use of the presented patterns could be used to compose the caches
+The use of the presented patterns is used to compose the caches
 behavior improving the maintenance of the system. In this line, the
 contribution of the approach is twofold. First, the mechanism of encapsulation
 and injection could be used to refactor the currently Mondrian caches
-(and also those that may be introduced in future) improving the code
+(and also those that may be introduced in the future) improving the code
 reuse. Second, the code legibility is increased because the \emph{Cache
 Concern} is extracted from the main concern leaving a cleaner code.
 
@@ -735,7 +735,7 @@ and they are finally composed during the injection phase. For example,
 the functionality related to the cache \emph{absoluteBoundsCache}
 is refactored by the patterns \emph{Reset Cache,} \emph{Lazy Initialization}, and \emph{Cache Initialization}.
 
-One of the main priorities during the refactoring process was not to affect the performance of the system. 
+One of the main priorities of the refactoring is to not affect the performance of the system. 
 For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations observed between the system before and after applying refactorings are not significant. That is because, in general, the code after the injection of the caches is the same that the original code before the Mondrian refactoring. There were only minor changes such as the reorder of statements in some methods (without changes in the behavior) and the deletion of methods with repeated code. The details of the benchmarks results are shown in Figure \ref{fig:Benchmark} in which the time execution to the nodes and edges visualization were calculated. The results of both benchmarks were average over a total of 10 samples. As can be seen, as was expected, there are not remarkable variations during these displaying.
 
 \begin{figure*}
@@ -747,7 +747,7 @@ For this reason a group of benchmarks were measured in order to evaluate the cac
 
 \end{figure*}
 
-\paragraph{Using cache in the main logic}
+\paragraph{Using cache in the main logic.}
 This experience has been the opportunity to rethink on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
 
 \begin{lstlisting} 
@@ -765,26 +765,23 @@ MOGraphElement >>translateAbsoluteCacheBy: aPoint
 
 The core of Mondrian is not independent of the cache implementation. The logic of Mondrian rely on the cache to implement its semantics. This is obviously wrong and this is situation is marked as a defect\footnote{\url{http://code.google.com/p/moose-technology/issues/detail?id=501}}.
 
-\paragraph{Singularity of \ct{\#displayOn:}} Displaying a node uses all the defined caches to have a fast rendering. We were not able to define \ct{\#displayOn:} as the result of an automatic composition. The main problem is that this method uses intensively the cache to load and save data during its execution. For this reason, the code related to the cache is very scattered across the method  making the restructuration of it by mean of cache patterns almost unviable. So, this method was restructured using the Generic AOP pattern. 
+\paragraph{Singularity of \ct{\#displayOn:}} Displaying a node uses all the defined caches to have a fast rendering. We were not able to define \ct{displayOn:} as the result of an automatic composition. The main problem is that this method uses intensively the cache to load and save data during its execution. For this reason, the code related to the cache is very scattered across the method  making the restructuration of it by mean of cache patterns almost unviable. So, this method was restructured using the Generic AOP pattern. 
 
-%: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-\section{Discussion}\seclabel{discussion}
 
-The injection mechanism may reorder statements in the instrumented method. This is the case of the reset method (which was presented in the previous section). As was shown, in this case the caches are resetted at the beginning of the method and after that the method \emph{resetElementsToLookup} and \emph{resetMetricCaches} are invocated in contrast with the original method in which the former was invocated at the beginning and the former at the end. Even though the order of calls is changed the behavior of the method is not modified. The consistent behavior was checked in a manual way and by mean of automatic test.
-
-\ab{How many occurrences of statement reordering?}
-
-\paragraph{Importance of the tests} However, in practice, this has not caused any noticeable problem. The extensive test set of Mondrian remained green after the instrumentation.
-
+\paragraph{Reordering.} The injection mechanism may reorder statements in the instrumented method. This is the case of the reset method (which was presented in the previous section). As was shown, in this case the caches are resetted at the beginning of the method and after that the method \emph{resetElementsToLookup} and \emph{resetMetricCaches} are invoked in contrast with the original method in which the former was invoked at the beginning and the former at the end. Even though the order of calls is changed the behavior of the method is not modified. The consistent behavior was manually and automatically checked.
 
 
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Related Work}\seclabel{relatedWork}
-Most of the work in AOP has been focused in Java and AspectJ. An approach called AspectS has been proposed for Smalltalk-Squeak~\cite{Hirschfeld2002}. This is a general purpose AOP language with dynamic weaving. \sv{No estoy seguro de como justificar que no utilizamos AspectS para los caches. ¿Si funciona en squeak funciona en pharo? Una posibilidad es el overhead que implica la definicion de los pointcuts y aspectos y que no se garantizaba la misma performance en la ejecucion} 
+Our approach is not particularly tied to our code weaver. An approach called AspectS has been proposed for Squeak Smalltalk~\cite{Hirschfeld2002}. AspectS is a general purpose AOP language with dynamic weaving. Unfortunately, it does not operate on Pharo, the language in which Mondrian is written. A new aspect language for Pharo is emerging\footnote{\url{http://pleiad.cl/phantom}}, we plan to use it in the future.
+
 Several approaches have been presented in order to refactor and migrate OO systems to AO ones. Some of these approaches use a low level of granularity focusing in the refactorization of simple languages elements such as methods or fields~\cite{Ceccato2008,Tonella2005,Binkley2005,Deursen2005,Hannemann2003}. 
 On the other hand, other approaches are focused in a high level of granularity. This kind of approach tries to encapsulate into an aspect an architectural pattern that represents a CCC. That is, these approaches are focused on the refactorization of a specific type of concern. Our work is under this category. 
-Others works that deals with the refactorization in a high level of granularity are discussed next. Da Silva et al.~\cite{Silva2009} present an approach of metaphor-driven heuristics and associated refactorings. The refactorization of the code proposed is applicable on two concerns metaphors. A heuristic represents a pattern of code that is repeated for an specific concern and it is encapsulated into an aspect by means of a set of fixed refactorings.
-Van der Rijst et al..~\cite{Rijst2008, Marin2009} propose a migration strategy based on crosscutting concern sorts. With this approach the CCCs are described by means of concern sorts. In order to refactor the code, each specific CCC sort indicates what refactorings should be applied to encapsulate it into an aspect. 
+
+Others works that deals with the refactorization in a high level of granularity are discussed next. Da Silva et al.~\cite{Silva2009} present an approach of metaphor-driven heuristics and associated refactorings. The refactorization of the code proposed is applicable on two concerns metaphors. A heuristic represents a pattern of code that is repeated for a specific concern and it is encapsulated into an aspect by means of a set of fixed refactorings.
+
+Van der Rijst et al..~\cite{Rijst2008,Marin2009} propose a migration strategy based on crosscutting concern sorts. With this approach the CCCs are described by means of concern sorts. In order to refactor the code, each specific CCC sort indicates what refactorings should be applied to encapsulate it into an aspect. 
+
 Hannemman et al.~\cite{Hannemann2005} present a role-based refactoring approach. Toward this goal the CCCs are described using abstract roles. In this case the refactorings that are going to be used to encapsulate a role are chosen by the developer in each case.
 Finally, AOP has been used for some mechanisms of cache in the past. Bouchenak et al.~\cite{Bouchenak2006} present a dynamic web caching content approach based on AOP. In order to achieve this goal, a set of weaving rules are specified using AspectJ as aspect-oriented language. In this same line, Loughran and Rashid~\cite{Loughran2004} propose a web cache to evaluate an aspect-oriented approach based on XML annotations. 
 
@@ -792,12 +789,13 @@ Finally, AOP has been used for some mechanisms of cache in the past. Bouchenak e
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Conclusion}\seclabel{conclusion}
 
-
+This paper presents a software evolution problem in which early made decisions become less relevant. We have solved this problem by using an aspect to encapsulate and separate problematic code from the base business code. The refactoring has been realized without a performance cost.
+All Mondrian's memoization implementations have been refactored into a dedicated aspect. 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-\section*{Acknowledgments}
-
-\small We gratefully thanks ...
+%\section*{Acknowledgments}
+%
+%\small We gratefully thanks ...
 
 % bibliography
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -927,7 +925,7 @@ MOGraphElement>>cacheCanvas: aCanvas
 \end{lstlisting}
 
 \paragraph{Return Cache.} In this refactorization the entire return clause
-is encapsulated into the pragma. The after clause is used to contain
+is encapsulated into the annotation. The after clause is used to contain
 the code because some computations can be performed before returning
 the cache. Following, the refactored code for the example presented
 in the last section is presented:
