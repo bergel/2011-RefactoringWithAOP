@@ -178,7 +178,7 @@
 	{PLEIAD Lab, Department of Computer Science (DCC), University of Chile, Santiago, Chile}
 	{http://bergel.eu}
 \authorinfo{Gabriela Ar\'evalo}
-	{Universidad Nacional de Quilmes, Bernal, \\ Buenos Aires, Argentina, Also CONICET}
+	{Universidad Nacional de Quilmes, Bernal, \\ Buenos Aires, Argentina, Also CONICET}{garevalo@unq.edu.ar}
 
 
 \maketitle
@@ -187,7 +187,7 @@
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 \begin{abstract}
-\chg{Unanticipated evolution of software is an activity difficult to realize. This paper presents a maintenance problem we faced while trying to evolve Mondrian, an open-source visualization engine: caches are now irrelevant with planned extension of Mondrian. The solution we adopted is to refactor these caches into a well defined aspect. This has been achieved without incurring a runtime penalty.} {During evolution phases of software, unanticipated changes are difficult to grasp. Mondrian, an open-source visualization engine, uses caching mechanism to store precalculated values avoiding calculating them when they are needed in the application. However, in the planned extensions of this tool, we have noticed that the caches are not relevant \ga{no me gusta esa palabra, pero no encuentro otra}. To solve this issue, we have refactored these caches into a well defined aspect. We have achieved it without incurring a runtime penalty \ga{qu\'e significa esta \'ultima frase}}
+Mondrian, an open-source visualization engine, uses caching mechanism to store precalculated values avoiding calculating them when they are needed in the application. During evolution phases of any software, unanticipated changes are difficult to predict.  Particularly in the case of Mondrian, in the planned extensions of this tool, we have noticed that the caches sometimes are not used \ga{Es lo que quer\'ian decir?"}. Using aspect-oriented programming, we have refactored these caches into a well defined aspect to solve the mentioned problem. We have achieved it without paying the price of runtime problems.
 
 \end{abstract}
 
@@ -195,27 +195,25 @@
 \section{Introduction}\seclabel{introduction}
 
 %problem
-\ga{Los primeros dos p\'arrafos no me convencen. Voy a reescribir o mejorar el texto}
-Coping with emerging requirements is probably one of the most difficult challenges in software engineering~\cite{Somm00a}. 
+Dealing with emerging requirements in a target application is probably one of the most difficult challenges in software engineering~\cite{Somm00a}. 
 
-This paper presents a solution to a maintenance problem we recently faced while developing the Mondrian application.
-Mondrian is an agile visualization engine. It is used in more than a dozen projects. As in many software developments, new requirements set by the increasing set of clients have an impact on assumptions that were hold for years. 
+This paper presents a solution to a maintenance problem we recently faced with while developing the Mondrian application.
+Mondrian is an agile visualization engine implemented in Pharo, and is used in more than a dozen projects \ga{podemos mencionar algunos?}. As in many software developments, new requirements of several increasing number of clients impact on design decisions that were hold for years. 
 
-Mondrian uses simple two-dimensions rendering to graphically visualize a target domain. Mondrian is almost exclusively used to visualize software metrics. It allows for a wide range of visual representations\footnote{\url{http://www.moosetechnology.org/docs/visualhall}}.
-One of the strong assumptions that Mondrian holds is the structure of its multiple cache mechanisms. 
+Mondrian uses simple two-dimensions rendering to graphically visualize a target domain. Mondrian is almost exclusively used to visualize software metrics and lets the user produce a wide range of visual representations\footnote{\url{http://www.moosetechnology.org/docs/visualhall}}.
+One of the strong design decision that Mondrian holds is the structure of its multiple cache mechanisms. 
 
 Mondrian has 9 caches spread over the graphical element hierarchy. 
-The caches aim to quickly render two dimensional widgets, graphically composed of rectangle and line shapes. Mondrian caches are instances of the memoization technique\footnote{\url{http://www.tfeb.org/lisp/hax.html\#MEMOIZE}}. Sending twice the same message returns the same value if there is no side effect that impacts the computation. 
+The caches aim to quickly render two dimensional widgets, graphically composed of rectangle and line shapes. Mondrian caches are instances of the memoization technique\footnote{\url{http://www.tfeb.org/lisp/hax.html\#MEMOIZE}}. Sending twice the same message returns the same value if there is no side effect that impacts on the computation. 
 
-Unfortunately, the new requirements of Mondrian defeats the purpose of some of the caches it defines. One example is the bounds computation to obtain the circumscribed rectangle of a two-dimensional graphical element. This cache is senseless in a 3D setting. Bypassing the cache results in a complex extension of Mondrian.
+Unfortunately, the new requirements of Mondrian defeats the purpose of some caches. One example is the bounds computation to obtain the circumscribed rectangle of a two-dimensional graphical element. This cache is senseless in a 3D setting. Bypassing the cache results in a complex extension of Mondrian.
 
 %solution
 We have first identified where the caches are implemented and how they interact with the rest of the application.
-For each cache, we marked methods that initialize the cache and reset it. 
-We have subsequently undertaken a major refactoring of Mondrian's core: we have produced a prototyping version of Mondrian in which caches are externalized from the base code. Our refactoring was implemented with a custom aspect mechanism \ga{qu\'e es esto? qu\'e es un custom?}.
-
+For each cache, we marked methods that initialize and reset the cache. 
+We have subsequently undertaken a major refactoring of Mondrian core: we have implemented a prototyping version of Mondrian, in which caches are externalized from the base code. We implement our refactoring with a customized aspect-based mechanism.
 %surprising result
-We were able to modularize the cache while preserving the overall architecture and Mondrian performances did not suffer from the refactoring.
+We were able to modularize the cache while preserving the overall architecture and Mondrian performances were not affected with the refactoring process.
 
 %contribution
 The contributions of this paper are: (i) identification of memoizing cross-cutting concern and (ii) refactorization of these cross-cutting concerns into modular and pluggable aspects.
@@ -259,9 +257,9 @@ This section details a maintenance problem we have faced with when developing Mo
 \subsection{Turning Mondrian into a framework}
 
 Mondrian\footnote{\url{http://www.moosetechnology.org/tools/mondrian}} is an agile visualization library ~\cite{Meye06a}. A domain specific language is provided to easily define interactive visualizations.
-Visualizations are structured along a graph structure, made of nested nodes and edges. Mondrian is a crucial component, used in more than a dozen independent projects. To meet clients performance requirements, Mondrian authors are paying a great attention to provide fast and scalable rendering. To that purpose, Mondrian contains a number of caches to avoid redundant code executions.
+Visualizations are structured along a graph structure, made of nested nodes and edges. Mondrian is a crucial component, used in more than a dozen independent projects. To meet clients performance requirements, Mondrian authors are focused on providing a fast and scalable rendering. To that purpose, Mondrian contains a number of caches to avoid redundant code executions.
 
-Mondrian is on the way to become a visualization engine framework more than a library as it is currently. Mondrian is now used in situations that were not originally planned. For example, Mondrian has been used to visualize the real-time behavior of animated robots\footnote{\url{http://www.squeaksource.com/Calder.html}}, 3D visualizations\footnote{\url{http://www.squeaksource.com/Klotz.html}}, whereas Mondrian has been originally designed to visualize software source code using plain 2D drawing~\cite{Lanz03d}. The caches that are intensively used when visualizing software are not useful and may even be a source of slowdown and complexity when visualizing animated robots. 
+Mondrian is on the way to become a visualization engine framework more than a library as it is currently. It is now used in situations that were not originally planned. For example, it has been used to visualize the real-time behavior of animated robots\footnote{\url{http://www.squeaksource.com/Calder.html}}, 3D visualizations\footnote{\url{http://www.squeaksource.com/Klotz.html}}, whereas it has been originally designed to visualize software source code using plain 2D drawing~\cite{Lanz03d}. The caches that are intensively used when visualizing software are not useful and may even be a source of slowdown and complexity when visualizing animated robots. 
 
 %The future Mondrian framework must offer the possibility of selectively using and combining caches.
 
@@ -278,7 +276,7 @@ MOGraphElement>>absoluteBounds
 		</b>self shape absoluteBoundsFor: self
 \end{lstlisting}
 
-The method \ct{absoluteBoundsFor:} implements a heavy computation to determine the smallest rectangle that contains all the nested elements. Since this method does not perform any global side effect, the class \ct{MOGraphElement} defines an instance variable called \ct{absoluteBoundsCache} which is initialized at the first invocation of \ct{absoluteBounds}. Subsequent invocation will therefore use the result previously computed. 
+The method \ct{absoluteBoundsFor:} implements a heavy computation to determine the smallest rectangle that contains all the nested elements. Since this method does not perform any global side effect, the class \ct{MOGraphElement} defines an instance variable called \ct{absoluteBoundsCache} which is initialized at the first invocation of \ct{absoluteBounds}. Subsequent invocations will therefore use the result previously computed. 
 
 Obviously, the variable \ct{absoluteBoundsCache} needs to be set to \ct{nil} when the bounds of the element are modified (\eg adding a new nested node, drag and dropping).
 
@@ -287,16 +285,16 @@ Obviously, the variable \ct{absoluteBoundsCache} needs to be set to \ct{nil} whe
 %=========
 \subsection{Problem}
 
-Mondrian intensively uses memoization for most of its computation. A user-performed interaction that leads to an update of the visualization invalidates the visualization. These memoization were gradually introduced over the development of Mondrian (which started in 2006). Each unpredicted usage \ga{qu\'e es unpredicted usage? una extensi\'on?} leaded to a performance problem that has been solved using a new memoization. There are about 32 memoizations in the current version of Mondrian.
+Mondrian intensively uses memoization for most of its computation. \ga{La siguiente frase tiene dos veces visualization} A user-performed interaction that leads to an update of the visualization invalidates the visualization. These memoization were gradually introduced over the development of Mondrian (which started in 2006). Each unpredictable usage, such as for example visualization of several inner nodes, leaded to a performance problem that has been solved using a new memoization. There are about 32 memoizations in the current version of Mondrian.
 
-These caches have been shaped along the common usage of Mondrian. Visualizations produced in Mondrian are \emph{all} static, employ colored geometrical objects.
+These caches have been modified along the common usage of Mondrian. Visualizations produced are \emph{all} static and employ colored geometrical objects.
 
 Extending the range of applications for Mondrian turns some of the caches senseless. For example \ct{absoluteBoundsCache} has no meaning in the three-dimensional version of Mondrian since the circumscribed rectangle is meaningful only with two dimensions.
 
 \paragraph{Using delegation.}
 We first tried to address this problem by relying only on explicit objects, one for each cache. This object would offer the needed operations for accessing and resetting a cache.
 
-As exemplified with the \ct{absoluteBounds} method given above, the caches are implemented by means of dedicated instance variables defined in the \ct{Cache} class. That is to say, each cache is associated with an instance variable. In this way, a variable of the Cache class, called \ct{generalCache}, is defined in the \ct{MOGraphElement} class. Through this variable the different caches can be accesed by mean of the \ct{cacheAt:(key)} method where \ct{key} is a string with the name of the cache.
+As exemplified with the \ct{absoluteBounds} method given above, the caches are implemented by means of dedicated instance variables defined in the \ct{Cache} class. That is to say, each cache is associated with an instance variable. In this way, a variable of the Cache class, called \ct{generalCache}, is defined in the \ct{MOGraphElement} class. Through this variable the different caches can be accesed with the \ct{cacheAt:(key)} method where \ct{key} is a string with the name of the cache.
 %The goal of the refactoring is the extraction of the \emph{Cache Concern} by means of the creation of a specific class to delegate the behavior of the caches\ab{Do we need this sentence, I guess no}. 
 
 %To accomplish this task could be used, for example, a strategy which uses a class containing a collection of caches and each cache can contain different types of items (as is shown in Fig. \ref{fig:Cache-behaviour-delegation.}). 
@@ -311,13 +309,13 @@ MOGraphElement>>absoluteBounds
 	 putElement: (self shape absoluteBoundsFor: self)].
 	^ <b>(generalCache cacheAt: 'absoluteBoundsCache')</b> getInternalCache.
 \end{lstlisting}
-As can be seen, with this approach the different instance variables related with the caches are replaced by a unique variable called \ct{generalCache}. On the other hand, the legibility of the method is deteriorated as well as the performance.
+As we observe, with this approach the different instance variables related with the caches are replaced by a unique variable called \ct{generalCache}. On the other hand, the legibility of the method is deteriorated as well as the performance.
 
-\paragraph{Significant overhead.} This modularization solely based on delegating message has a significant overhead at execution time
-because of additional indirection.
-The separation of this concern is not a trivial problem. \ga{la siguiente frase no la entiendo} Specifically,
+\paragraph{Significant overhead.} This modularization solely based on delegating messages has a significant overhead at execution time
+due to the additional indirection.
+The separation of this concern is not a trivial problem. Specifically,
 when we use this solution, the caches mechanism was 3 to 10 times slower,
-being the delay proportional to the number of elements.
+with the delay proportional to the number of elements.
 
 %
 \begin{figure*}
@@ -333,11 +331,11 @@ being the delay proportional to the number of elements.
 %=========
 \subsection{Requirement for refactoring}
 
-\ga{La siguiente frase la tengo que reescribir} Refactoring Mondrian is a task that has to be performed carefully. In particular, the refactoring has to follow the constraints:
+Refactoring Mondrian is a task to be performed carefully. In particular, the refactoring has the following constraints:
 
 \begin{itemize}
 \item All cache accesses have to be identified. This is essential to have all the caches equally considered. 
-\item No cost of performance must be incurred, else it defeats the whole purpose of the work.
+\item No cost of performance must be paid, else it defeats the whole purpose of the work.
 \item Readability must not be reduced.
 \end{itemize}
 
@@ -345,9 +343,9 @@ being the delay proportional to the number of elements.
 \section{Aspect-based Refactoring}\seclabel{refactoring}
 
 
-The goal of the refactoring is the separation of the \emph{Cache
+The goal of the refactoring is the separation \ga{puedo decir extraction?} of the \emph{Cache
 Concern} from the four essential classes of \emph{Mondrian}: \emph{MOGraphElement}
-and its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}). These classes total 235 methods and more than 1000 number of lines of codes.
+and its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}). These classes have 235 methods and more than 1000 number of lines of codes in total.
 
 %========
 \subsection{Identifying caches}
@@ -374,7 +372,7 @@ are grouped together based on the purpose of its use (\eg saving information, ob
 %are grouped together based on the purpose of its use". A eso me refiero con "The task of group", la tarea de agrupar el codigo segun lo que hacen}.
 
 These groups allow the identification of code patterns that are
-repeated in the use of the caches. For each found pattern an aspect refactoring is associated ~\cite{Kellens2007}. These code patterns are described in the following subsections.
+repeated when using the caches. An aspect refactoring \ga{podemos decir aspect-based refactoring?} is associated for each found pattern~\cite{Kellens2007}. These code patterns are described in the following subsections.
 
 %========
 \subsection{Pattern description}\seclabel{Pattern-Identification}
@@ -385,13 +383,12 @@ Each pattern is described with a relevant typical occurrence,
 the number of occurrences we found in Mondrian and an illustration.
 
 \paragraph{Reset Cache.} A cache has to be invalidated when its content has to be updated. We refer to this action as reset. The code to express a reset is \emph{cache:=resetValue} where
-\emph{resetValue} and the initial value the cache has to have \sv{Is something missing here?}. Typically, the \emph{resetValue} depends on the type of the stored value. It could be \ct{nil}, an empty dictionary, or a particular value (\eg \ct{0@0}).
+\emph{resetValue} and the initial value the cache has to have \sv{Is something missing here?}\ga{pareciera que son dos valores, por la descripcion}. Typically, the \emph{resetValue} depends on the type of the stored value. It could be \ct{nil}, an empty dictionary, or a particular value (\eg \ct{0@0}).
 Eighteen occurrences of this pattern are found in Mondrian. 
-We found that in some occurrences the reset of the caches is performed before the logic of the method, and other methods in which the reset must be done after. For example, the method \ct{MOGraphElement>>shapeBoundsAt:put:} resets the caches \emph{absoluteBoundsCache} and \emph{boundsCache} before modifying the cache cacheShapeBounds. In contrast, the method \ct{MONode>>translateBy:bounded:} resets the caches \emph{boundsCache} and \emph{absoluteBoundsCache} after executing most of the sentences of the method. 
+We found that in some occurrences the reset of the caches is performed before the logic of the method, and other methods in which the reset must be done after. For example, the method \ct{MOGraphElement>>shapeBoundsAt:put:} resets the caches \emph{absoluteBoundsCache} and \emph{boundsCache} before modifying the cache cacheShapeBounds. In contrast, the method \ct{MONode>>translateBy:bounded:} resets the caches \emph{boundsCache} and \emph{absoluteBoundsCache} after executing most of the statements of the method. 
 
 Consider the method \ct{MOGraphElement>>resetCache}. This method is called whenever the user drags and drops a graphical element. In
-this method the \emph{Reset Cache} pattern is repeated in four \ga{ puedo reemplazar "occasions" with "places"?}
-to reset the caches \emph{boundsCache}, \emph{absoluteBoundsCache},
+this method the \emph{Reset Cache} pattern is repeated in four occasions to reset the caches \emph{boundsCache}, \emph{absoluteBoundsCache},
 \emph{cacheShapeBounds}, and \emph{elementsToDisplayCache}. In this case, the reset of the caches can be done before or after the execution of the methods \emph{resetElementsToLookup} and  \emph{resetMetricCaches}.
 
 \begin{lstlisting} 
@@ -406,7 +403,7 @@ MOGraphElement>>resetCache
 
 
 
-\paragraph{Lazy Initialization.} In some situations it is not relevant to initialize the cache before it is actually needed. This happens when a graphical element is not outside the displayed window \ga{"is not outside" es "is inside"}: no cache initialization is required for a graphical element if the element is not displayed. These caches are relevant only when the user actually sees the element by scrolling the visualization. Typically, the structure of this pattern is: \emph{\^{} cache ifNil:[cache:=newValue]}. Mondrian contains five occurrences of a lazy cache initialization. Consider the \ct{bounds} method:
+\paragraph{Lazy Initialization.} In some situations it is not relevant to initialize the cache before it is actually needed. This happens when a graphical element is not outside the displayed window \ga{puedo decir: is contained but not displayed in a window?}: no cache initialization is required for a graphical element if the element is not displayed. These caches are relevant only when the user actually sees the element by scrolling the visualization. Typically, the structure of this pattern is: \emph{\^{} cache ifNil:[cache:=newValue]}. Mondrian contains five occurrences of a lazy cache initialization. Consider the \ct{bounds} method:
 
 \begin{lstlisting} 
 MOEdge>>bounds  
@@ -417,7 +414,7 @@ The circumscribed rectangle is returned by \ct{computeBoundsFor:} and is perform
 
 \paragraph{Cache Initialization.} This pattern represents a situation in
 which a value is assigned to a cache. The structure of the pattern
-is only an assignation: \emph{cache := aValue}. This pattern is found
+is only an assignment: \emph{cache := aValue}. This pattern is found
 in three occasions. Consider the method \ct{cacheCanvas:}
 
 \begin{lstlisting} 
@@ -492,14 +489,14 @@ Total  & 32 & 24 & \multicolumn{1}{c}{}\tabularnewline
 %\caption{Pattern locations in MOGraphElement hierarchy.\label{fig:Pattern-locations-in}}
 %\end{figure*}
 
-\figref{PatternLocation} shows the distribution of the caches over the main Mondrian classes, methods in which the caches are used, and the classes where each cache is defined. As we can observe, the caches are used and defined across the whole class hierarchy.
+\figref{PatternLocation} shows the distribution of the caches over the main Mondrian classes, methods in which the caches are used, and the classes where each cache is defined. As we observe, the caches are used and defined across the whole class hierarchy.
 
 %========
 \subsection{Cache concerns as aspects}
 
-Once the code patterns are identified, we set up strategies to refactor them. The goal of the refactorization is the separation of these patterns from the main code without changing the overall behavior, enforced by an extended set of unit tests.
+Once the code patterns are identified, we set up strategies to refactor them. The goal of the refactorization is the separation \ga{extraction?} of these patterns from the main code without changing the overall behavior, enforced by an extended set of unit tests.
 
-The refactoring is performed by encapsulating each of the nine caches into an aspect. Aspect definition weaving is achieved via a custom AOP mechanism based on code annotation and source code manipulation.
+The refactoring is performed by encapsulating each of the nine caches into an aspect. Aspect definition weaving is achieved via a customized AOP mechanism based on code annotation and source code manipulation.
 
 %Several alternatives were explored to encapsulate the \emph{Cache
 %Concern}. After exploring a variety of options such as the separation
@@ -516,14 +513,14 @@ The refactoring is performed by encapsulating each of the nine caches into an as
 The refactoring strategy used is: for each method that involves a cache, the part of the method that directly deals with the cache is removed and the method is annotated.
 %The decision to define the pragma inside the method is in order to allow a better visibility of the code that is injected. 
 The annotation is defined along the cache pattern associated to the cache access removed from the method.
-The annotations structure is \emph{$<$patternCodeName: cacheName$>$} where \emph{cacheName} indicates the name of the cache to consider and \emph{patternCodeName} indicates the pattern code to be generated. For example, the annotation \emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates that the \emph{Lazy Initialization} pattern will be ``weaved'' for the cache \emph{absoluteBoundsCache} in the method in which the annotation is defined.
+The annotation structure is \emph{$<$patternCodeName: cacheName$>$} where \emph{cacheName} indicates the name of the cache to be considered and \emph{patternCodeName} indicates the pattern code to be generated. For example, the annotation \emph{$<$LazyInitializationPattern: \#absoluteBoundsCache$>$} indicates that the \emph{Lazy Initialization} pattern will be ``weaved'' for the cache \emph{absoluteBoundsCache} in the method in which the annotation is defined.
 
-The weaving is done via a custom code injection mechanism \ga{otra vez el custom}. For each annotation a method may have, the code injector performs the needed source code transformation to use the cache. Specifically, the weaving is achieved through the following steps:
+The weaving is done via a customized code injection mechanism. For each annotation a method may have, the code injector performs the needed source code transformation to use the cache. Specifically, the weaving is achieved through the following steps:
 
 \begin{enumerate}
 \item A new method is created with the same name that the method that contains
 the annotation but with the prefix {}``compute'' plus the name of the
-class in which is defined. For example, given the next method
+class in which is defined. For example, given the following method:
 \begin{lstlisting} 
 MOGraphElement>>absoluteBounds
 	<LazyInitializationPattern: #absoluteBoundsCache> 
@@ -547,8 +544,8 @@ MOGraphElement>>absoluteBounds
 \end{lstlisting}
 \end{enumerate}
 
-In order to automatically generate the code to be injected, the code weaver uses a class hierarchy (\figref{Pattern-hierarchy}), rooted in the abstract \ct{CachePattern}.
-\ct{CachePattern} contains the methods necessary for processing annotations (called pragmas in the Pharo terminology \ga{nunca se dijo previamente que Mondrian se basaba en Pharo}). Each subclass overrides \ct{generateMethodWith:} to perform the source code manipulation.
+In order to automatically generate the code to be injected, the code weaver uses a class hierarchy (\figref{Pattern-hierarchy}), rooted in the abstract \ct{CachePattern} class.
+\ct{CachePattern} class contains the methods needed to process annotations (called pragmas in the Pharo terminology). Each subclass overrides \ct{generateMethodWith:} method to perform the source code manipulation.
 
 %Each cache pattern has to implements this interface which allow the
 %generation of the methods mentioned above. Basically each subclass
@@ -567,19 +564,18 @@ In order to automatically generate the code to be injected, the code weaver uses
 \end{figure*}
 
 
-Next, the refactorings applied to each code pattern are presented.
+Next, we present the refactorings applied to each code pattern.
 
 \paragraph{Reset Cache.} In order to refactor this pattern each statement
 that resets a cache was extracted using an annotation. The annotation contains
 the cache to be resetted. Since in some cases the resets are done
 at the beginning of a method and others at the end, a hierarchy of
-Reset Cache pattern is created. As shown in \figref{Pattern-hierarchy},
-this hierarchy is composed of the classes \emph{AbstractResetCachePattern},
+Reset Cache pattern is created. \figref{Pattern-hierarchy} shows this hierarchy, which is composed of the classes \emph{AbstractResetCachePattern},
 \emph{BeforeResetCachePattern}, and \emph{AfterResetCachePattern}.
 The annotations are defined in the classes at the bottom of the hierarchy
 as $<$BeforeResetCachePattern: cacheName$>$ and $<$AfterResetCachePattern:
 cacheName$>$ respectively. For example, in the case presented in 
-\secref{Pattern-Identification} of the method \emph{resetCache},
+\secref{Pattern-Identification} of the \emph{resetCache} method,
 an annotation is defined for each reset of a cache leaving a cleaner code
 in the method. In this case, all the resets are done before the method
 call, so the used annotations are the ones defined by \emph{BeforeResetCachePattern}.
@@ -627,7 +623,7 @@ the precondition checking is contained into an annotation defined as
 $<$LazyInitializationPattern: cacheName$>$. Given that
 the cache is initialized with a value when the precondition fails,
 the original method is modified to return this value. For example,
-in the case of the method \emph{bounds} introduced in the previous
+in the case of the \emph{bounds} method introduced in the previous
 section, the code related to the cache is extracted using the annotation
 and only the value to initialize the cache remains in the method as
 shown the code below:
@@ -638,7 +634,7 @@ MOEdge>>bounds
 	self shape computeBoundsFor: self. 
 \end{lstlisting}
 
-In this way, the code to be generated for this example will be \emph{boundsCache
+Thus, the code to be generated in this example will be \emph{boundsCache
 ifNotNil: {[} \textasciicircum{} boundsCache{]}. \textasciicircum{}
 boundsCache:= computeMOEdgeBounds.}
 
@@ -659,7 +655,7 @@ MOGraphElement>>cacheCanvas: aCanvas
 
 \paragraph{Return Cache.} In this refactorization the entire return clause
 is encapsulated by the annotation. The annotation is defined as $<$ReturnCachePattern:
-cacheName$>$. Following, the refactored code for the example shown in
+cacheName$>$. Following, the refactored code of the example shown in
 the last section is presented:
 
 \begin{lstlisting}
@@ -679,8 +675,8 @@ MOGraphElement>>isCacheLoaded
 
 Using restructurings based on the patterns, the \emph{Cache Concern} is refactorized
 properly in more than 85\% of the methods of the \ct{MOGraphElement} hierarchy that uses one or more caches.
-Some of the uses of the caches are not encapsulated by means of 
-cache patterns due to that (1) the code belongs to a cache pattern but the code related with the cache is too mixed \ga{puedo decir "tangled?"} with the main concern, or (2) the code does not match with any of the described patterns. For example, the following method
+Some uses of the caches are not encapsulated by means of 
+cache patterns due to that (1) the code belongs to a cache pattern but the code related with the cache is tangled with the main concern, or (2) the code does not match with any of the described patterns. For example, the following method
 \begin{lstlisting} 
 MOGraphElement>>nodeWith: anObject ifAbsent: aBlock  
 	| nodeLookedUp |
@@ -690,13 +686,13 @@ MOGraphElement>>nodeWith: anObject ifAbsent: aBlock
 	lookupNodeCache at: anObject put: nodeLookedUp.
 	^ nodeLookedUp
 \end{lstlisting}
-could not been refactored because the cache \emph{lookupNodeCache} is used to make different computations across the whole
+could not be refactored because the cache \emph{lookupNodeCache} is used to make different computations across the whole
 method by which is closely tied to the main concern. 
 These uses of the caches that are not encapsulated
 by using the described patterns are also refactored by means of annotations. For these cases
 a \emph{Generic AOP} pattern is used. The used annotations have the structure
 \emph{$<$cache: cacheName before: beforeCode after: afterCode $>$} where \emph{cache}
-indicates the name of the cache that will be injected. The before and after clauses
+indicates the name of the cache to be injected. The before and after clauses
  indicate the source code that will be injected and
 when it will be injected in regard to the execution of the method.
 That is to say, the code inside the original method will be replaced
@@ -712,7 +708,7 @@ MOGraphElement>>nodeWith: anObject ifAbsent: aBlock
 	nodeLookedUp := self nodes detect: [:each | each model = anObject ] ifNone: aBlock.
 	^ nodeLookedUp
 \end{lstlisting}
-As can be seen, all the code with references to the cache  \emph{lookupNodeCache} are encapsulated into the before clause of the annotation.
+As we see, all the code with references to the cache  \emph{lookupNodeCache} are encapsulated into the before clause of the annotation.
 
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Results}\seclabel{results}
@@ -729,14 +725,14 @@ The cache composition is achieved during the injection phase. As the
 different pieces of code that are related to the cache are encapsulated
 by means of the patterns restructurings, an implicit process of division of the complexity
 of the caches behavior is achieved. That is to say, this kind of approach
-helps the developer by splitting the caches behavior in smalls fragments
+helps the developer by splitting the caches behavior in small fragments
 of code. These fragments of code are encapsulated by the patterns restructurings
 and they are finally composed during the injection phase. For example,
 the functionality related to the cache \emph{absoluteBoundsCache}
 is refactored by the patterns \emph{Reset Cache,} \emph{Lazy Initialization}, and \emph{Cache Initialization}.
 
 One of the main priorities of the refactoring is to not affect the performance of the system. 
-For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations of performance between the system before and after applying refactorings that we observe are not significant. That is because, in general, the code after the injection of the caches is the same that the original code before the Mondrian refactoring. There were only minor changes such as the reorder of statements in some methods (without changes in the behavior) and the deletion of methods with repeated code. \ga{La siguiente frase la tengo que reescribir} The details of the benchmarks results are shown in Figure \ref{fig:Benchmark} in which the time execution to the nodes and edges visualization were calculated. The results of both benchmarks were average over a total of 10 samples. As can be seen, as was expected, there are not remarkable variations during these displaying.
+For this reason a group of benchmarks were measured in order to evaluate the cache performance when a set of nodes and edges are displayed. The variations of performance between the system before and after applying refactorings that we observe are not significant. That is because, in general, the code after the injection of the caches is the same that the original code before the Mondrian refactoring. There were only minor changes such as the reorder of statements in some methods (without changes in the behavior) and the deletion of methods with repeated code. Figure \ref{fig:Benchmark} shows the details of the benchmarks results, in which the time execution to the nodes and edges visualization were calculated. The results of both benchmarks were average over a total of 10 samples. As we see, as was expected, there are not remarkable variations during these displaying.
 
 \begin{figure*}
 \begin{centering}
@@ -748,7 +744,7 @@ For this reason a group of benchmarks were measured in order to evaluate the cac
 \end{figure*}
 
 \paragraph{Using cache in the main logic.}
-This experience has been the opportunity to rethink on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
+This experience has been the opportunity to think again on the implementation of Mondrian. We found one occurrence where a cache variable is not solely used as a cache, but as part of main logic of Mondrian. The method bounds contains an access to \ct{boundsCache}: 
 
 \begin{lstlisting} 
 MOGraphElement >>bounds
@@ -768,12 +764,12 @@ The core of Mondrian is not independent of the cache implementation. The logic o
 \paragraph{Singularity of \ct{\#displayOn:}} Displaying a node uses all the defined caches to have a fast rendering. We were not able to define \ct{displayOn:} as the result of an automatic composition. The main problem is that this method uses intensively the cache to load and save data during its execution. For this reason, the code related to the cache is very scattered across the method making the restructuration by mean of cache patterns almost unviable. So, this method was restructured using the Generic AOP pattern. 
 
 
-\paragraph{Reordering.} The injection mechanism may reorder statements in the instrumented method. This is the case of the reset method (which was presented in the previous section). As shown, in this case the caches are resetted at the beginning of the method and after that the method \emph{resetElementsToLookup} and \emph{resetMetricCaches} are invoked in contrast with the original method in which the former was invoked at the beginning and the former at the end. Even though the order of calls is changed the behavior of the method is not modified. The consistent behavior was manually and automatically checked.
+\paragraph{Reordering.} The injection mechanism may reorder statements in the instrumented method. This is the case of the reset method (which was presented in the previous section). As shown, in this case the caches are resetted at the beginning of the method and after that the methods \emph{resetElementsToLookup} and \emph{resetMetricCaches} are invoked in contrast with the original method in which the former was invoked at the beginning and the former at the end. Even though the order of calls is changed, the behavior of the method is not modified. The consistent behavior was manually and automatically checked.
 
 
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Related Work}\seclabel{relatedWork}
-Our approach is not particularly tied to our code weaver. An approach called AspectS has been proposed for Squeak Smalltalk~\cite{Hirschfeld2002}. AspectS is a general purpose AOP language with dynamic weaving. Unfortunately, it does not operate on Pharo, the language in which Mondrian is written. A new aspect language for Pharo is emerging\footnote{\url{http://pleiad.cl/phantom}}, we plan to use it in the future.
+Our approach is not particularly tied to our code weaver. An approach called AspectS has been proposed for Squeak Smalltalk~\cite{Hirschfeld2002}. AspectS is a general purpose AOP language with dynamic weaving. Unfortunately, it does not work on Pharo, the language in which Mondrian is written. A new aspect language for Pharo is emerging\footnote{\url{http://pleiad.cl/phantom}}, we plan to use it in the future.
 
 Several approaches have been presented in order to refactor and migrate object-oriented systems to aspect-oriented ones. Some of these approaches use a low level of granularity focusing on the refactorization of simple languages elements such as methods or fields~\cite{Ceccato2008,Tonella2005,Binkley2005,Deursen2005,Hannemann2003}. 
 On the other hand, other approaches are focused on a high level of granularity. This kind of approaches tries to encapsulate into an aspect an architectural pattern that represents a cross-cutting concern. That is, these approaches are focused on the refactorization of a specific type of concern. Our work is under this category. 
@@ -789,8 +785,8 @@ Finally, AOP has been used for some mechanisms of cache in the past. Bouchenak e
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Conclusion}\seclabel{conclusion}
 
-This paper presents a software evolution problem in which early made decisions become less relevant. We have solved this problem by using an aspect to encapsulate and separate problematic code from the base business code. The refactoring has been realized without a performance cost.
-All Mondrian's memoization implementations have been refactored into a dedicated aspect. \sv{debe completarse ¿no?}
+This paper presents a software evolution problem in which early made decisions become less relevant. We have solved this problem by using aspects to encapsulate and separate problematic code from the base business code. The refactoring has been realized without a performance cost.
+All Mondrian memoization implementations have been refactored into a dedicated aspect. \sv{debe completarse ¿no?}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %\section*{Acknowledgments}
