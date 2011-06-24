@@ -198,7 +198,7 @@ Mondrian, an open-source visualization engine, uses caching mechanism to store p
 Dealing with emerging requirements in a target application is probably one of the most difficult challenges in software engineering~\cite{Somm00a}. 
 
 This paper presents a solution to a maintenance problem we recently faced with while developing the Mondrian application.
-Mondrian is an agile visualization engine implemented in Pharo, and is used in more than a dozen projects \ga{podemos mencionar algunos?}. As in many software developments, new requirements of several increasing number of clients impact on design decisions that were hold for years. 
+Mondrian is an agile visualization engine implemented in Pharo, and is used in more than a dozen projects\footnote{\url{http://moosetechnology.org/tools}}. As in many software developments, new requirements of several increasing number of clients impact on design decisions that were hold for years. 
 
 Mondrian uses simple two-dimensions rendering to graphically visualize a target domain. Mondrian is almost exclusively used to visualize software metrics and lets the user produce a wide range of visual representations\footnote{\url{http://www.moosetechnology.org/docs/visualhall}}.
 One of the strong design decision that Mondrian holds is the structure of its multiple cache mechanisms. 
@@ -285,7 +285,7 @@ Obviously, the variable \ct{absoluteBoundsCache} needs to be set to \ct{nil} whe
 %=========
 \subsection{Problem}
 
-Mondrian intensively uses memoization for most of its computation. \ga{La siguiente frase tiene dos veces visualization} A user-performed interaction that leads to an update of the visualization invalidates the visualization. These memoization were gradually introduced over the development of Mondrian (which started in 2006). Each unpredictable usage, such as for example visualization of several inner nodes, leaded to a performance problem that has been solved using a new memoization. There are about 32 memoizations in the current version of Mondrian.
+Mondrian intensively uses memoization for most of its computation. A user-performed interaction that leads to an update invalidates the visualization, since the cache need to be recomputed. These memoizations were gradually introduced over the development of Mondrian (which started in 2006). Each unpredictable usage, such as for example visualization of several inner nodes, leaded to a performance problem that has been solved using a new memoization. There are about 32 memoizations in the current version of Mondrian.
 
 These caches have been modified along the common usage of Mondrian. Visualizations produced are \emph{all} static and employ colored geometrical objects.
 
@@ -403,7 +403,7 @@ MOGraphElement>>resetCache
 
 
 
-\paragraph{Lazy Initialization.} In some situations it is not relevant to initialize the cache before it is actually needed. This happens when a graphical element is not outside the displayed window \ga{puedo decir: is contained but not displayed in a window?}: no cache initialization is required for a graphical element if the element is not displayed. These caches are relevant only when the user actually sees the element by scrolling the visualization. Typically, the structure of this pattern is: \emph{\^{} cache ifNil:[cache:=newValue]}. Mondrian contains five occurrences of a lazy cache initialization. Consider the method \ct{bounds}:
+\paragraph{Lazy Initialization.} In some situations it is not relevant to initialize the cache before it is actually needed. This happens when a graphical element is outside the scrollbar visual frame: no cache initialization is required for a graphical element if the element is not displayed. These caches are relevant only when the user actually sees the element by scrolling the visualization. Typically, the structure of this pattern is: \emph{\^{} cache ifNil:[cache:=newValue]}. Mondrian contains five occurrences of a lazy cache initialization. Consider the method \ct{bounds}:
 
 \begin{lstlisting} 
 MOEdge>>bounds  
@@ -786,7 +786,7 @@ Finally, AOP has been used for some mechanisms of cache in the past. Bouchenak e
 \section{Conclusion}\seclabel{conclusion}
 
 This paper presents a software evolution problem in which early made decisions become less relevant. We have solved this problem by using aspects to encapsulate and separate problematic code from the base business code. The refactoring has been realized without a performance cost.
-All Mondrian memoization implementations have been refactored into a dedicated aspect. \sv{debe completarse ¿no?}
+All Mondrian memoization implementations have been refactored into a dedicated aspect. %\sv{debe completarse ¿no?} \ab{Parece bien}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %\section*{Acknowledgments}
