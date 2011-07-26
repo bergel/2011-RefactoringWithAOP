@@ -187,7 +187,7 @@
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 \begin{abstract}
-Mondrian, an open-source visualization engine, uses caching mechanism to store precalculated values avoiding calculating them when they are needed in the application. During evolution phases of any software, unanticipated changes are difficult to predict.  Particularly in the case of Mondrian, in the planned extensions of this tool, we have noticed that the caches sometimes are not used. Using aspect-oriented programming, we have refactored these caches into a well defined aspect to solve the mentioned problem. We have achieved it without paying the price of runtime problems.
+Mondrian, an open-source visualization engine, uses caching mechanism to store precalculated values avoiding calculating them when they are needed in the application. During evolution phases of any software, changes are difficult to predict.  Particularly in the case of Mondrian, in the planned extensions of this tool, we have noticed that the caches sometimes are not used. Using aspect-oriented programming, we have refactored these caches into a well defined aspect to solve the mentioned problem. We have achieved it without paying the price of runtime problems.
 
 \end{abstract}
 
@@ -197,7 +197,7 @@ Mondrian, an open-source visualization engine, uses caching mechanism to store p
 %problem
 Dealing with emerging requirements in a target application is probably one of the most difficult challenges in software engineering~\cite{Somm00a}. 
 
-This paper presents a solution to a maintenance problem we recently faced with while developing the Mondrian application.
+This paper presents a solution to a maintenance problem we recently faced while developing the Mondrian application.
 Mondrian is an agile visualization engine implemented in Pharo, and is used in more than a dozen projects\footnote{\url{http://moosetechnology.org/tools}}. As in many software developments, new requirements of several increasing number of clients impact on design decisions that were hold for years. 
 
 Mondrian uses simple two-dimensions rendering to graphically visualize a target domain. Mondrian is almost exclusively used to visualize software metrics and lets the user produce a wide range of visual representations\footnote{\url{http://www.moosetechnology.org/docs/visualhall}}.
@@ -345,7 +345,7 @@ Refactoring Mondrian is a task to be performed carefully. In particular, the ref
 
 The goal of the refactoring is the separation of the \emph{Cache
 Concern} from the four essential classes of \emph{Mondrian}: \emph{MOGraphElement}
-and its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}). These classes have 235 methods and more than 1000 number of lines of codes in total.
+and its subclasses (\emph{MOEdge}, \emph{MONode}, and \emph{MORoot}). These classes have 235 methods and more than 1000 lines of codes in total.
 
 %========
 \subsection{Identifying caches}
@@ -378,7 +378,7 @@ repeated when using the caches. An aspect refactoring is associated for each fou
 \subsection{Pattern description}\seclabel{Pattern-Identification}
 
 
-We identified 5 code patterns based on Mondrian source code and are described below.
+We identified 5 code patterns based on Mondrian source code and we describe them below.
 Each pattern is described with a relevant typical occurrence,
 the number of occurrences we found in Mondrian and an illustration.
 
@@ -676,7 +676,7 @@ MOGraphElement>>isCacheLoaded
 Using restructurings based on the patterns, the \emph{Cache Concern} is refactorized
 properly in more than 85\% of the methods of the \ct{MOGraphElement} hierarchy that uses one or more caches.
 Some uses of the caches are not encapsulated by means of 
-cache patterns due to that (1) the code belongs to a cache pattern but the code related with the cache is tangled with the main concern, or (2) the code does not match with any of the described patterns. For example, the following method
+cache patterns because (1) the code belongs to a cache pattern but the code related with the cache is tangled with the main concern, or (2) the code does not match with any of the described patterns. For example, the following method
 \begin{lstlisting} 
 MOGraphElement>>nodeWith: anObject ifAbsent: aBlock  
 	| nodeLookedUp |
@@ -713,7 +713,7 @@ As we see, all the code with references to the cache  \emph{lookupNodeCache} are
 %: % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 \section{Results}\seclabel{results}
 
-The use of the presented patterns is used to compose the caches
+The presented patterns are used to compose the caches
 behavior improving the maintenance of the system. In this line, the
 contribution of the approach is twofold. First, the mechanism of encapsulation
 and injection could be used to refactor the current Mondrian caches
@@ -759,7 +759,7 @@ MOGraphElement >>translateAbsoluteCacheBy: aPoint
 	absoluteBoundsCache := absoluteBoundsCache translateBy: aPoint
 \end{lstlisting}
 
-The core of Mondrian is not independent of the cache implementation. The logic of Mondrian relies on the cache to implement its semantics. This is obviously wrong and this is situation is marked as a defect\footnote{\url{http://code.google.com/p/moose-technology/issues/detail?id=501}}.
+The core of Mondrian is not independent of the cache implementation. The logic of Mondrian relies on the cache to implement its semantics. This is obviously wrong and this situation is marked as a defect\footnote{\url{http://code.google.com/p/moose-technology/issues/detail?id=501}}.
 
 \paragraph{Singularity of \ct{\#displayOn:}} Displaying a node uses all the defined caches to have a fast rendering. We were not able to define \ct{displayOn:} as the result of an automatic composition. The main problem is that this method uses intensively the cache to load and save data during its execution. For this reason, the code related to the cache is very scattered across the method making the restructuration by mean of cache patterns almost unviable. So, this method was restructured using the Generic AOP pattern. 
 
@@ -776,7 +776,7 @@ On the other hand, other approaches are focused on a high level of granularity. 
 
 Others works that deal with the refactorization in a high level of granularity are discussed next. Da Silva et al.~\cite{Silva2009} present an approach of metaphor-driven heuristics and associated refactorings. The refactorization of the code proposed is applicable on two concerns metaphors. A heuristic represents a pattern of code that is repeated for a specific concern and it is encapsulated into an aspect by means of a set of fixed refactorings.
 
-Van der Rijst et al.~\cite{Rijst2008,Marin2009} propose a migration strategy based on crosscutting concern sorts. With this approach the cross-cutting concerns are described by means of concern sorts. In order to refactor the code, each specific CCC sort indicates what refactorings should be applied to encapsulate it into an aspect. 
+Van der Rijst et al.~\cite{Rijst2008,Marin2009} propose a migration strategy based on crosscutting concern sorts. With this approach the cross-cutting concerns are described by means of concern sorts. In order to refactor the code, each specific crosscutting concern sort indicates what refactorings should be applied to encapsulate it into an aspect. 
 
 Hannemman et al.~\cite{Hannemann2005} present a role-based refactoring approach. Toward this goal the cross-cutting concerns are described using abstract roles. In this case the refactorings that are going to be used to encapsulate a role are chosen by the developer in each case.
 Finally, AOP has been used for some mechanisms of cache in the past. Bouchenak et al.~\cite{Bouchenak2006} present a dynamic web caching content approach based on AOP. In order to achieve this goal, a set of weaving rules are specified using AspectJ as aspect-oriented language. In this same line, Loughran and Rashid~\cite{Loughran2004} propose a web cache to evaluate an aspect-oriented approach based on XML annotations. 
