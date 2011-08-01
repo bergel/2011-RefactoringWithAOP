@@ -173,7 +173,7 @@
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 \begin{abstract}
-Mondrian, an open-source visualization engine, uses caching mechanism to store precalculated values avoiding calculating them when they are needed in the application. During evolution phases of any software, changes are difficult to predict.  Particularly in the case of Mondrian, in the planned extensions of this tool, we have noticed that the caches sometimes are not used. Using aspect-oriented programming, we have refactored these caches into a well defined aspect to solve the mentioned problem. We have achieved it without paying the price of runtime problems.
+Mondrian, an open-source visualization engine, uses caching mechanism to avoid redundant computation. These caches are structured along Mondrian purpose: generating static two-dimensional visualizations. Particularly in the case of Mondrian, we have noticed that the caches are meaningless for the evolution being made on Mondrian. Using aspect-oriented programming, we have refactored these caches into well defined aspects to address the evolution problem. We have achieved it without paying the price of runtime problems.
 
 \end{abstract}
 
